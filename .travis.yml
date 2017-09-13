@@ -17,9 +17,6 @@ android:
     # if you need to run emulator(s) during your tests
     - sys-img-armeabi-v7a-android-22
     - sys-img-armeabi-v7a-android-17
-script:
-  - bash ./gradlew :app:assembleDebug
-
 notifications:
   email:
     - oussama.abdellah@gmail.com
