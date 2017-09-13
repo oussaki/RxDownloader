@@ -2,10 +2,10 @@ language: android
 android:
   components:
     # The BuildTools version 
-    - build-tools-19.1.0
+    - build-tools-26.0.1
 
     # The SDK version used to compile 
-    - android-22
+    - android-26
 
     # Additional components
     - extra-google-google_play_services
@@ -15,7 +15,7 @@ android:
 
     # Specify at least one system image,
     # if you need to run emulator(s) during your tests
-    - sys-img-armeabi-v7a-android-22
+    - sys-img-armeabi-v7a-android-26
     - sys-img-armeabi-v7a-android-17
 notifications:
   email:
