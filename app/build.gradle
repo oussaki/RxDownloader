@@ -20,12 +20,15 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.github.oussaki:RxDownloader:0.1.1'
+    //    compile 'com.github.oussaki:RxDownloader:0.1.2'
     compile 'com.android.support:appcompat-v7:26.+'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    testCompile 'org.robolectric:robolectric:3.1.1'
+    testCompile 'org.assertj:assertj-core:3.8.0'
     testCompile 'junit:junit:4.12'
+    compile project(':rxfilesdownloader')
 }

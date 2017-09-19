@@ -121,9 +121,14 @@ public class RxDownloader {
                             saveToFile(inputStream, file);
                             downloaded++;
                             int progress = Math.abs((downloaded * 100) / size);
-                            if (iDownloadProgress != null)
+                            Log.d("Progress","ppppp"+progress);
+                            if (iDownloadProgress != null){
+                                Log.d("OnProgress","calling"+progress);
                                 iDownloadProgress.OnProgress(progress);
+                            }
                         } catch (IOException io) {
+                            Log.d("IOException","IOException"+io.getMessage());
+
                             errors++;
                         }
                         Map.Entry<String, File> entry =
@@ -140,6 +145,7 @@ public class RxDownloader {
                 }).doOnComplete(new Action() {
                     @Override
                     public void run() throws Exception {
+                        
                         if (iDownloadProgress != null)
                             iDownloadProgress.OnFinish();
                     }
