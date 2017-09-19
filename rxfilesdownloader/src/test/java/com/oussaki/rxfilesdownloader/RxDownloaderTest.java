@@ -25,12 +25,14 @@ import static org.junit.Assert.assertNotEquals;
  */
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = Build.VERSION_CODES.LOLLIPOP,
+@Config(
+        sdk = Build.VERSION_CODES.LOLLIPOP,
         manifest = "build/intermediates/manifests/aapt/debug/AndroidManifest.xml")
 public class RxDownloaderTest {
     RxDownloader rxDownloader;
     Context context;
     String TAG = "Tests";
+
     @Before
     public void setUp() throws Exception {
         context = RuntimeEnvironment.application;
@@ -64,12 +66,6 @@ public class RxDownloaderTest {
     }
 
     @Test
-    public void clickingLogin_shouldStartLoginActivity() {
-        int x = 1;
-        assertThat(x).isEqualTo(1);
-    }
-
-    @Test
     public void IsDownloadingAsyncFiles() throws Exception {
         Flowable<List<Map.Entry<String, File>>> obs = rxDownloader.asObservable().toFlowable();
         List<Map.Entry<String, File>> res = obs.blockingFirst();
@@ -77,5 +73,6 @@ public class RxDownloaderTest {
             Log.i("RxDownloader", "key" + res.get(i).getKey() + ",value " + res.get(i).getValue());
         }
         assertNotEquals(res.size(), 0);
+        assertThat(res.size()).isEqualTo(3);
     }
 }
