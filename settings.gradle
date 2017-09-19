@@ -1,1 +1,1 @@
-include ':app', ':rxdownloader'
+include ':app', ':rxfilesdownloader'
