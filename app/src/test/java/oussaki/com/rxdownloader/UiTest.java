@@ -36,7 +36,7 @@ public class UiTest {
     @Test
     public void LoginFormOpened() throws Exception {
         shadowActivity = Shadows.shadowOf(main);
-        shadowActivity.findViewById(R.id.start).performClick();
+        shadowActivity.findViewById(R.id.Async).performClick();
         assertEquals("Download finish successfully", ((TextView) shadowActivity.findViewById(R.id.progress)).getText().toString()
         );
     }
