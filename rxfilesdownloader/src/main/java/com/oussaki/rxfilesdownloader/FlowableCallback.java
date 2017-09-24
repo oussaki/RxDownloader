@@ -5,7 +5,10 @@ import android.util.Log;
 import java.io.IOException;
 
 import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.android.MainThreadDisposable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.AsyncSubject;
 import okhttp3.Call;
@@ -19,8 +22,9 @@ import okhttp3.Response;
 public class FlowableCallback implements Callback {
     private final AsyncSubject<Response> subject = AsyncSubject.create();
     String TAG = "FlowableCallback";
-    public Observable<Response> getFlowable() {
-        return subject.toFlowable(BackpressureStrategy.BUFFER).subscribeOn(Schedulers.io()).toObservable();
+
+    public Flowable<Response> getObservable() {
+        return subject.toFlowable(BackpressureStrategy.BUFFER);
     }
 
     @Override
@@ -34,4 +38,5 @@ public class FlowableCallback implements Callback {
         subject.onNext(response);
         subject.onComplete();
     }
+
 }
