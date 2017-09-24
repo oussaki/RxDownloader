@@ -29,9 +29,8 @@ import okhttp3.Request;
 
 public class Main extends AppCompatActivity {
     TextView txtProgress;
-<<<<<<< HEAD
-// comment
-=======
+
+// Main
 
     String url = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg.ximg.m_12_m.smart.jpg";
     String url2 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg";
@@ -165,7 +164,7 @@ public class Main extends AppCompatActivity {
 
     }
 
->>>>>>> 4543d4a0e283246997aff3b54cb72fb6b403b778
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
