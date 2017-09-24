@@ -15,7 +15,9 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
+import io.reactivex.Single;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotEquals;
@@ -67,8 +69,8 @@ public class RxDownloaderTest {
 
     @Test
     public void IsDownloadingAsyncFiles() throws Exception {
-        Flowable<List<Map.Entry<String, File>>> obs = rxDownloader.asObservable().toFlowable();
-        List<Map.Entry<String, File>> res = obs.blockingFirst();
+        Single<List<Map.Entry<String, File>>> obs = rxDownloader.asObservable().toList();
+        List<Map.Entry<String, File>> res = obs.blockingGet();
         for (int i = 0; i < res.size(); i++) {
             Log.i("RxDownloader", "key" + res.get(i).getKey() + ",value " + res.get(i).getValue());
         }
