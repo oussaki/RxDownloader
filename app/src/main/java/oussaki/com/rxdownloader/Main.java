@@ -28,6 +28,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Cancellable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.AsyncSubject;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.ReplaySubject;
 import okhttp3.Call;
@@ -267,41 +268,34 @@ public class Main extends AppCompatActivity {
     OkHttpClient ok = new OkHttpClient();
 
     private void doSomeWork() {
-
-        ReplaySubject<Integer> sourcex = ReplaySubject.create();
-// It will get 1, 2, 3, 4
-        sourcex.subscribe(getSecondObserver());
-
-        sourcex.onNext(1);
-        sourcex.onNext(2);
-        sourcex.onNext(3);
-        sourcex.onNext(4);
-        sourcex.onComplete();
-
-
-        ReplaySubject<ResponseBody> source = ReplaySubject.create();
+        AsyncSubject<Long> source = AsyncSubject.create();
+        source.subscribe(getFirstObserver());
+        source.onNext(1555L);
 
         Observable
-                .fromCallable(() -> ok.newCall(new Request.Builder().url(url).build()).execute())
-                .observeOn(AndroidSchedulers.mainThread())
+                .fromCallable(() -> ok.newCall(new Request.Builder().url(url).build()).execute().body())
                 .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(response -> {
-                    Log.i(TAG,"donnext"+response.isSuccessful());
-                    source.onNext(response.body());
+                    current_thread();
+                    Log.i(TAG,"do on next:"+response.contentLength());
+                    source.onNext(response.contentLength());
+                    Log.e(TAG,"do on next");
                 }).subscribe();
 
         Observable
-                .fromCallable(() -> ok.newCall(new Request.Builder().url(url2).build()).execute())
+                .fromCallable(() -> ok.newCall(new Request.Builder().url(url2).build()).execute().body())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .doOnNext(response -> {
-                    Log.i(TAG,"donnext"+response.isSuccessful());
-                    source.onNext(response.body());
+                    current_thread();
+                    Log.e(TAG,"do on next:"+response.contentLength());
+                    source.onNext(response.contentLength());
+                    Log.e(TAG,"do on next");
                 }).subscribe();
 
 
         source.onComplete();
-        source.subscribe(getFirstObserver()); // it will get 1, 2, 3, 4
 
         /*
          * it will emit 1, 2, 3, 4 for second observer also as we have used replay
@@ -311,8 +305,8 @@ public class Main extends AppCompatActivity {
     }
 
 
-    private Observer<ResponseBody> getFirstObserver() {
-        return new Observer<ResponseBody>() {
+    private Observer<Long> getFirstObserver() {
+        return new Observer<Long>() {
 
             @Override
             public void onSubscribe(Disposable d) {
@@ -320,9 +314,9 @@ public class Main extends AppCompatActivity {
             }
 
             @Override
-            public void onNext(ResponseBody value) {
-                Log.d(TAG, " First onNext value : " + value.contentLength());
-                multiline.append(" First onNext : value : " + value.contentLength());
+            public void onNext(Long value) {
+                Log.d(TAG, " First onNext value : " + value);
+                multiline.append(" First onNext : value : " + value);
                 multiline.append("\n");
             }
 
