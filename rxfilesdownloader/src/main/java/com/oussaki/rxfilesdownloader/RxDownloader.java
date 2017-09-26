@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
@@ -102,6 +104,7 @@ public class RxDownloader {
      * @return
      */
     private Observable<Flowable<File>> DownloadAFile(final String filename) {
+
         final String fileurl = files.get(filename);
         final File file = new File(STORAGE + File.separator + filename);
         if (file.exists())
@@ -220,7 +223,7 @@ public class RxDownloader {
         HashMap<String, String> files;
 
         /**
-         * @param context
+         * @param context The context
          */
         public Builder(Context context) {
             this.context = context;
@@ -234,15 +237,11 @@ public class RxDownloader {
         }
 
 
-        public HashMap<String, String> getListOfFilesUrls() {
-            return files;
-        }
-
         /**
          * Set a custom Http Client (OkhttpClient )
          *
-         * @param client
-         * @return
+         * @param client and Okhttp instance
+         * @return Builder
          */
         Builder setClient(@NonNull OkHttpClient client) {
             if (client != null)
@@ -255,7 +254,7 @@ public class RxDownloader {
          * (asynchronous , synchronous)
          *
          * @param strategy
-         * @return
+         * @return Builder
          */
         public Builder setStrategy(int strategy) {
             STRATEGY = strategy;
@@ -268,7 +267,7 @@ public class RxDownloader {
          *
          * @param newName
          * @param url
-         * @return
+         * @return Builder
          */
         public Builder addFile(String newName, String url) {
             String extesion = "";
@@ -282,7 +281,7 @@ public class RxDownloader {
          * Extract the extension of file from a given URL
          *
          * @param url
-         * @return
+         * @return Builder
          */
         protected String ExtractExtension(String url) {
             return url.substring(url.lastIndexOf("."));
@@ -292,7 +291,7 @@ public class RxDownloader {
          * ُExtract the Name and extension of given file URL
          *
          * @param url
-         * @return
+         * @return Builder
          */
         protected String ExtractNameAndExtension(String url) {
             return url.substring(url.lastIndexOf("/") + 1);
@@ -303,7 +302,7 @@ public class RxDownloader {
          * Set the storage type to save files in
          *
          * @param url
-         * @return
+         * @return Builder
          */
         public Builder addFile(String url) {
             String name = ExtractNameAndExtension(url);
@@ -315,7 +314,7 @@ public class RxDownloader {
          * Set the storage type to save files in
          *
          * @param STORAGE
-         * @return
+         * @return Builder
          */
         public Builder setStorage(int STORAGE) {
             if (STORAGE == RxStorage.DATA_DIRECTORY)
@@ -329,7 +328,7 @@ public class RxDownloader {
          * Add Bulk of files to the HashMap
          *
          * @param files
-         * @return
+         * @return Builder
          */
         public Builder addFiles(HashMap<String, String> files) {
             this.files.putAll(files);

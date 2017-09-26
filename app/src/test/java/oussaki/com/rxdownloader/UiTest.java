@@ -11,6 +11,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowActivity;
+import org.robolectric.shadows.ShadowLog;
 
 import static org.junit.Assert.assertEquals;
 
@@ -30,6 +31,7 @@ public class UiTest {
 
     @Before
     public void setup() throws Exception {
+        ShadowLog.stream = System.out;
         main = Robolectric.setupActivity(Main.class);
     }
 
@@ -37,7 +39,7 @@ public class UiTest {
     public void LoginClickPerformed() throws Exception {
         shadowActivity = Shadows.shadowOf(main);
         shadowActivity.findViewById(R.id.Async).performClick();
-        
+
 //        assertEquals("Download finish successfully",
 //                ((TextView) shadowActivity.findViewById(R.id.progress)).getText().toString()
 //        );
