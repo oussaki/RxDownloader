@@ -22,13 +22,30 @@ import java.util.AbstractMap;
 import java.util.HashMap;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Cancellable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.AsyncSubject;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.ReplaySubject;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import okhttp3.internal.http.RealResponseBody;
+import okhttp3.internal.http2.Header;
+import okio.BufferedSource;
 
 public class Main extends AppCompatActivity {
     TextView txtProgress;
+
+// Main
 
     String url = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg.ximg.m_12_m.smart.jpg";
     String url2 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg";
@@ -83,19 +100,15 @@ public class Main extends AppCompatActivity {
                 });
     }
 
-    void saveToFile(InputStream is, File file) throws IOException {
-        BufferedInputStream input = new BufferedInputStream(is);
-        OutputStream output = new FileOutputStream(file);
-        byte[] data = new byte[1024];
-        long total = 0;
-        int count;
-        while ((count = input.read(data)) != -1) {
-            total += count;
-            output.write(data, 0, count);
+    void saveToFile(byte[] is, File file) throws IOException {
+        FileOutputStream outputStream;
+        try {
+            outputStream = openFileOutput(file.getName(), getApplicationContext().MODE_PRIVATE);
+            outputStream.write(is);
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        output.flush();
-        output.close();
-        input.close();
     }
 
     void setProgressText(String s) {
@@ -133,8 +146,7 @@ public class Main extends AppCompatActivity {
                             .observeOn(AndroidSchedulers.mainThread())
                             .doOnNext(response -> {
                                 try {
-                                    final InputStream inputStream = response.body().byteStream();
-                                    saveToFile(inputStream, file);
+                                    saveToFile(response.body().bytes(), file);
                                     Log.d("files", "Saving file " + file.getPath());
                                     downloaded++;
                                 } catch (IOException io) {
@@ -162,6 +174,295 @@ public class Main extends AppCompatActivity {
 
     }
 
+    private void current_thread() {
+        Log.e(TAG, "Thread:" + Thread.currentThread().getName());
+    }
+
+    private void something() {
+
+        ObservableEmitter emitter = new ObservableEmitter() {
+            int downloaded = 0;
+
+            @Override
+            public void setDisposable(Disposable d) {
+
+            }
+
+            @Override
+            public void setCancellable(Cancellable c) {
+
+            }
+
+            @Override
+            public boolean isDisposed() {
+                return false;
+            }
+
+            @Override
+            public ObservableEmitter serialize() {
+                return null;
+            }
+
+            @Override
+            public void onNext(Object o) {
+                current_thread();
+                String url = (String) o;
+                Log.i(TAG, "do on next:" + url);
+                OkHttpClient client = new OkHttpClient();
+                Request request = new Request.Builder().url(url).build();
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        Log.d(TAG, "Response" + response.isSuccessful());
+                        downloaded++;
+                        if (downloaded == 5)
+                            onComplete();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Throwable error) {
+
+            }
+
+            @Override
+            public void onComplete() {
+                Log.i(TAG, "onComplete");
+                current_thread();
+
+//                txtProgress.setText("Completed");
+            }
+        };
+
+
+        Observable
+                .create(e -> {
+
+                    emitter.onNext(url);
+                    emitter.onNext(url2);
+                    emitter.onNext(url);
+                    emitter.onNext(url3);
+                    emitter.onNext(url);
+
+
+                }).doOnNext(o -> {
+
+        })
+
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .doOnError(throwable -> {
+                    Log.e(TAG, "on error:" + throwable.getMessage());
+                })
+                .subscribe();
+    }
+
+    /* PublishSubject emits to an observer only those items that are emitted
+    * by the source Observable, subsequent to the time of the subscription.
+    */
+    OkHttpClient ok = new OkHttpClient();
+    int done = 0;
+
+    ResponseBody downloadFile(String url) throws IOException {
+        try {
+            return ok.newCall(new Request.Builder().url(url).build()).execute().body();
+        } catch (IOException e) {
+            throw new IOException("Can not download the file");
+        }
+    }
+
+    class Tuple {
+        File file;
+        byte[] bytes;
+        int progress;
+
+        public int getProgress() {
+            return progress;
+        }
+
+        public void setProgress(int progress) {
+            this.progress = progress;
+        }
+
+        public File getFile() {
+            return file;
+        }
+
+        public void setFile(File file) {
+            this.file = file;
+        }
+
+        public byte[] getBytes() {
+            return bytes;
+        }
+
+        public void setBytes(byte[] bytes) {
+            this.bytes = bytes;
+        }
+    }
+
+    private void doSomeWork() {
+        ReplaySubject<Tuple> source = ReplaySubject.create();
+        source.subscribe(getFirstObserver());
+        final HashMap<String, String> files = new HashMap<>();
+        files.put(url, "file1.jpg");
+        files.put(url2, "file2.jpg");
+        files.put(aVideo, "video.mp4");
+        files.put(url, "file3.jpg");
+        files.put(url3, "file4.jpg");
+        files.put(url3, "file5.jpg");
+        done = files.size();
+        size = files.size();
+
+        Observable
+                .fromIterable(files.keySet())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .flatMap(urlx -> {
+                    Observable
+                            .fromCallable(() -> downloadFile(urlx).bytes())
+                            .onErrorReturn(throwable -> {
+                                Log.e(TAG, "throwable");
+                                done++;
+                                return null;
+                            })
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .doOnNext(response -> {
+                                done--;
+                                Log.i(TAG, "do on next:" + response.length);
+                                current_thread();
+                                final File file = new File(getCacheDir() + File.separator + files.get(urlx));
+                                int progress = Math.abs(((done * 100) / size) - 100);
+
+                                Tuple tuple = new Tuple();
+                                tuple.setBytes(response);
+                                tuple.setProgress(progress);
+                                tuple.setFile(file);
+
+                                source.onNext(tuple);
+                                if (done == 0) {
+                                    Log.i(TAG, done + " i will throw on complete");
+                                    source.onComplete();
+                                }
+
+                                Log.e(TAG, "do on next");
+                            }).subscribe();
+                    return observer -> {
+                        int x = 1;
+                    };
+                })
+                .subscribe();
+
+//
+//        Observable
+//                .fromCallable(() -> ok.newCall(new Request.Builder().url(url2).build()).execute().body())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribeOn(Schedulers.io())
+//                .doOnNext(response -> {
+//                    current_thread();
+//                    Log.e(TAG, "do on next:" + response.byteStream().toString());
+//                    source.onNext(response.contentLength());
+//                    done++;
+//                    if (done == 2) {
+//                        Log.i(TAG, "2 i will throw on complete");
+//                        source.onComplete();
+//                    }
+//
+//                    Log.e(TAG, "do on next");
+//                }).subscribe();
+
+
+//        source.onComplete();
+
+        /*
+         * it will emit 1, 2, 3, 4 for second observer also as we have used replay
+         */
+        //  source.subscribe(getSecondObserver());
+
+    }
+
+
+    private Observer<Tuple> getFirstObserver() {
+        return new Observer<Tuple>() {
+
+            @Override
+            public void onSubscribe(Disposable d) {
+                progressBar.setProgress(0);
+                Log.d(TAG, " First onSubscribe : " + d.isDisposed());
+            }
+
+            @Override
+            public void onNext(Tuple tuple) {
+                try {
+                    saveToFile(tuple.getBytes(), tuple.getFile()); // save file
+
+                    Log.d(TAG, " First onNext value : " + tuple.getFile().getName());
+                    progressBar.setProgress(tuple.getProgress());
+                    multiline.append(" Progress is: " + tuple.getProgress());
+                    multiline.append(" File downloaded: " + tuple.getFile().getName());
+                    multiline.append("\n");
+                } catch (IOException e) {
+                    onError(new IllegalStateException("Can't not save file:" + tuple.getFile().getName()));
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.d(TAG, " First onError : " + e.getMessage());
+                multiline.append("Error when downloading");
+                multiline.append("\n");
+
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "Download onComplete");
+                multiline.append(" Download Complete");
+                multiline.append("\n");
+            }
+        };
+    }
+
+    private Observer<Integer> getSecondObserver() {
+        return new Observer<Integer>() {
+
+            @Override
+            public void onSubscribe(Disposable d) {
+                multiline.append(" Second onSubscribe : isDisposed :" + d.isDisposed());
+                Log.d(TAG, " Second onSubscribe : " + d.isDisposed());
+
+            }
+
+            @Override
+            public void onNext(Integer value) {
+                multiline.append(" Second onNext : value : " + value);
+                multiline.append("\n");
+                Log.d(TAG, " Second onNext value : " + value);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                multiline.append(" Second onError : " + e.getMessage());
+                multiline.append("\n");
+                Log.d(TAG, " Second onError : " + e.getMessage());
+            }
+
+            @Override
+            public void onComplete() {
+                multiline.append(" Second onComplete");
+                multiline.append("\n");
+                Log.d(TAG, " Second onComplete");
+            }
+        };
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -170,6 +471,6 @@ public class Main extends AppCompatActivity {
         multiline = (EditText) findViewById(R.id.multiline);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         findViewById(R.id.sync).setOnClickListener(view -> Sample(Strategy.SYNC));
-        findViewById(R.id.Async).setOnClickListener(view -> Sample(Strategy.ASYNC));
+        findViewById(R.id.Async).setOnClickListener(view -> doSomeWork());
     }
 }
