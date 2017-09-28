@@ -16,7 +16,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -265,8 +267,8 @@ public class Main extends AppCompatActivity {
 
     private void doSomeWork() {
         ReplaySubject<Tuple> source = ReplaySubject.create();
-
-        source.subscribe(getFirstObserver());
+        Observer<Tuple> tupleObserver = getFirstObserver();
+        source.subscribe(tupleObserver);
 
         final HashMap<String, String> files = new HashMap<>();
         files.put(url, "file1.jpg");
@@ -321,46 +323,19 @@ public class Main extends AppCompatActivity {
 
                                 Log.e(TAG, "do on next");
                             }).subscribe();
-                    return   observer -> {
-                    };
-                })
-                .subscribe(o -> {
+                    return Observable.just(tupleObserver);
+                }).subscribe();
 
-                });
-
-//
-//        Observable
-//                .fromCallable(() -> ok.newCall(new Request.Builder().url(url2).build()).execute().body())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribeOn(Schedulers.io())
-//                .doOnNext(response -> {
-//                    current_thread();
-//                    Log.e(TAG, "do on next:" + response.byteStream().toString());
-//                    source.onNext(response.contentLength());
-//                    done++;
-//                    if (done == 2) {
-//                        Log.i(TAG, "2 i will throw on complete");
-//                        source.onComplete();
-//                    }
-//
-//                    Log.e(TAG, "do on next");
-//                }).subscribe();
-
-
-//        source.onComplete();
-
-        /*
-         * it will emit 1, 2, 3, 4 for second observer also as we have used replay
-         */
-        //  source.subscribe(getSecondObserver());
 
     }
 
     private Observer<Tuple> getFirstObserver() {
         return new Observer<Tuple>() {
+            List<Tuple> tuples;
 
             @Override
             public void onSubscribe(Disposable d) {
+                tuples = new ArrayList<>();
                 progressBar.setProgress(0);
                 multiline.setText("");
                 Log.d(TAG, " First onSubscribe : " + d.isDisposed());
@@ -370,13 +345,15 @@ public class Main extends AppCompatActivity {
             public void onNext(Tuple tuple) {
                 try {
                     saveToFile(tuple.getBytes(), tuple.getFile()); // save file
-
                     Log.d(TAG, " First onNext value : " + tuple.getFile().getName());
+                    tuples.add(tuple);
                     progressBar.setProgress(tuple.getProgress());
                     multiline.append(" Progress is: " + tuple.getProgress());
                     multiline.append(" File downloaded: " + tuple.getFile().getName());
                     multiline.append("\n");
+
                 } catch (IOException e) {
+
                     onError(new IllegalStateException("Can't not save file:" + tuple.getFile().getName()));
                 }
             }
@@ -386,13 +363,12 @@ public class Main extends AppCompatActivity {
                 Log.d(TAG, " First onError : " + e.getMessage());
                 multiline.append("Error when downloading");
                 multiline.append("\n");
-
             }
 
             @Override
             public void onComplete() {
-                Log.d(TAG, "Download onComplete");
-                multiline.append(" Download Complete");
+                Log.d(TAG, "Download Complete");
+                multiline.append(tuples.size() + " files downloaded successfully ");
                 multiline.append("\n");
             }
         };
@@ -424,6 +400,7 @@ public class Main extends AppCompatActivity {
 
             @Override
             public void onComplete() {
+
                 multiline.append(" Second onComplete");
                 multiline.append("\n");
                 Log.d(TAG, " Second onComplete");
