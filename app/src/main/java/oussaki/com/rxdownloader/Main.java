@@ -12,12 +12,9 @@ import com.oussaki.rxfilesdownloader.IDownloadProgress;
 import com.oussaki.rxfilesdownloader.RxDownloader;
 import com.oussaki.rxfilesdownloader.Strategy;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.AbstractMap;
 import java.util.HashMap;
 
@@ -28,19 +25,12 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Cancellable;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.AsyncSubject;
-import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.ReplaySubject;
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
-import okhttp3.internal.http.RealResponseBody;
-import okhttp3.internal.http2.Header;
-import okio.BufferedSource;
 
 public class Main extends AppCompatActivity {
     TextView txtProgress;
@@ -56,6 +46,11 @@ public class Main extends AppCompatActivity {
     int size;
     EditText multiline;
     ProgressBar progressBar;
+    /* PublishSubject emits to an observer only those items that are emitted
+    * by the source Observable, subsequent to the time of the subscription.
+    */
+    OkHttpClient ok = new OkHttpClient();
+    int done = 0;
 
     private void Sample(int strategy) {
         new RxDownloader.Builder(getApplicationContext())
@@ -263,53 +258,16 @@ public class Main extends AppCompatActivity {
                 .subscribe();
     }
 
-    /* PublishSubject emits to an observer only those items that are emitted
-    * by the source Observable, subsequent to the time of the subscription.
-    */
-    OkHttpClient ok = new OkHttpClient();
-    int done = 0;
-
-    ResponseBody downloadFile(String url) throws IOException {
-        try {
-            return ok.newCall(new Request.Builder().url(url).build()).execute().body();
-        } catch (IOException e) {
-            throw new IOException("Can not download the file");
-        }
+    byte[] downloadFile(String url) throws IOException {
+        return ok.newCall(new Request.Builder().url(url).build()).execute().body().bytes();
     }
 
-    class Tuple {
-        File file;
-        byte[] bytes;
-        int progress;
-
-        public int getProgress() {
-            return progress;
-        }
-
-        public void setProgress(int progress) {
-            this.progress = progress;
-        }
-
-        public File getFile() {
-            return file;
-        }
-
-        public void setFile(File file) {
-            this.file = file;
-        }
-
-        public byte[] getBytes() {
-            return bytes;
-        }
-
-        public void setBytes(byte[] bytes) {
-            this.bytes = bytes;
-        }
-    }
 
     private void doSomeWork() {
         ReplaySubject<Tuple> source = ReplaySubject.create();
+
         source.subscribe(getFirstObserver());
+
         final HashMap<String, String> files = new HashMap<>();
         files.put(url, "file1.jpg");
         files.put(url2, "file2.jpg");
@@ -326,26 +284,35 @@ public class Main extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .flatMap(urlx -> {
                     Observable
-                            .fromCallable(() -> downloadFile(urlx).bytes())
+                            .fromCallable(() -> downloadFile(urlx))
                             .onErrorReturn(throwable -> {
                                 Log.e(TAG, "throwable");
-                                done++;
-                                return null;
-                            })
+                                byte[] b = new byte[1];
+                                Log.e(TAG, "b.length:" + b.length);
+                                return b;
+                            }).onErrorResumeNext(observer -> {
+//                        observer.onNext();
+                    })
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .doOnNext(response -> {
+                                if (response.length == 1) {
+                                    source.onError(new IOException("Can not download the file"));
+                                    return;
+                                }
+
                                 done--;
                                 Log.i(TAG, "do on next:" + response.length);
                                 current_thread();
                                 final File file = new File(getCacheDir() + File.separator + files.get(urlx));
-                                int progress = Math.abs(((done * 100) / size) - 100);
+                                int progress = 0;
+                                if (size > 0)
+                                    progress = Math.abs(((done * 100) / size) - 100);
 
                                 Tuple tuple = new Tuple();
                                 tuple.setBytes(response);
                                 tuple.setProgress(progress);
                                 tuple.setFile(file);
-
                                 source.onNext(tuple);
                                 if (done == 0) {
                                     Log.i(TAG, done + " i will throw on complete");
@@ -354,11 +321,12 @@ public class Main extends AppCompatActivity {
 
                                 Log.e(TAG, "do on next");
                             }).subscribe();
-                    return observer -> {
-                        int x = 1;
+                    return   observer -> {
                     };
                 })
-                .subscribe();
+                .subscribe(o -> {
+
+                });
 
 //
 //        Observable
@@ -388,13 +356,13 @@ public class Main extends AppCompatActivity {
 
     }
 
-
     private Observer<Tuple> getFirstObserver() {
         return new Observer<Tuple>() {
 
             @Override
             public void onSubscribe(Disposable d) {
                 progressBar.setProgress(0);
+                multiline.setText("");
                 Log.d(TAG, " First onSubscribe : " + d.isDisposed());
             }
 
@@ -472,5 +440,35 @@ public class Main extends AppCompatActivity {
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         findViewById(R.id.sync).setOnClickListener(view -> Sample(Strategy.SYNC));
         findViewById(R.id.Async).setOnClickListener(view -> doSomeWork());
+    }
+
+    class Tuple {
+        File file;
+        byte[] bytes;
+        int progress;
+
+        public int getProgress() {
+            return progress;
+        }
+
+        public void setProgress(int progress) {
+            this.progress = progress;
+        }
+
+        public File getFile() {
+            return file;
+        }
+
+        public void setFile(File file) {
+            this.file = file;
+        }
+
+        public byte[] getBytes() {
+            return bytes;
+        }
+
+        public void setBytes(byte[] bytes) {
+            this.bytes = bytes;
+        }
     }
 }
