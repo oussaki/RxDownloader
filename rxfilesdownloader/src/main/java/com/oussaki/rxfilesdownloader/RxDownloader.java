@@ -4,21 +4,17 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -49,6 +45,15 @@ public class RxDownloader {
     }
 
 
+
+
+
+
+    public RxDownloader OnDownloadComplete(Consumer<? super Object> onNext){
+
+        return this;
+    }
+
     /**
      * Set Listeners for downloader to Handle events Like :
      * initProgress : Before starting downloading
@@ -71,27 +76,6 @@ public class RxDownloader {
         return obj == null;
     }
 
-    /**
-     * Store a file in Local Storage
-     *
-     * @param is
-     * @param file
-     * @throws IOException
-     */
-    void saveToFile(InputStream is, File file) throws IOException {
-        BufferedInputStream input = new BufferedInputStream(is);
-        OutputStream output = new FileOutputStream(file);
-        byte[] data = new byte[1024];
-        long total = 0;
-        int count;
-        while ((count = input.read(data)) != -1) {
-            total += count;
-            output.write(data, 0, count);
-        }
-        output.flush();
-        output.close();
-        input.close();
-    }
 
     private void current_thread() {
         Log.e(TAG, "Thread:" + Thread.currentThread().getName());
@@ -166,6 +150,11 @@ public class RxDownloader {
 //                })
 //                ;
     }
+
+
+
+
+
 
     /**
      * Downloading the files Asynchronously
