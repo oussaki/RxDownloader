@@ -10,11 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.File;
 import java.util.List;
-import java.util.Map;
-
-import io.reactivex.Flowable;
 
 import static org.junit.Assert.assertNotEquals;
 
@@ -37,28 +33,13 @@ public class ExampleInstrumentedTest {
         String url2 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg";
         String url3 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/x-trail/product_code/product_version/overview/14TDI_ROGb004x.jpg";
         rxDownloader = new RxDownloader.Builder(context)
-                .setStorage(RxStorage.DATA_DIRECTORY)
-                .setStrategy(Strategy.ASYNC)
+//                .setStorage(RxStorage.DATA_DIRECTORY)
+//                .setStrategy(DownloadStrategy.ASYNC)
                 .addFile("file1", url)
                 .addFile(url3)
                 .addFile(url2)
                 .build()
-                .setListeners(new IDownloadProgress() {
-                    @Override
-                    public void initProgress() {
-                        Log.i(TAG, "init Progress ");
-                    }
-
-                    @Override
-                    public void OnProgress(int progress) {
-                        Log.i(TAG, "OnProgress " + progress);
-                    }
-
-                    @Override
-                    public void OnFinish() {
-                        Log.i(TAG, "OnFinish");
-                    }
-                });
+        ;
     }
 
 
@@ -69,11 +50,10 @@ public class ExampleInstrumentedTest {
 
     @Test
     public void IsDownloadingAsyncFiles() throws Exception {
-        Flowable<List<Map.Entry<String, File>>> obs = rxDownloader.asObservable().toFlowable();
-        List<Map.Entry<String, File>> res = obs.blockingFirst();
-        for (int i = 0; i < res.size(); i++) {
-            Log.i("RxDownloader", "key" + res.get(i).getKey() + ",value " + res.get(i).getValue());
-        }
+        List<FileContainer> res = rxDownloader.asList().toObservable().blockingFirst();
+        res.forEach(fileContainer -> {
+            Log.i("RxDownloader", "key" + fileContainer.getFilename() + ",value " + fileContainer.getUrl());
+        });
         assertNotEquals(res.size(), 0);
     }
 

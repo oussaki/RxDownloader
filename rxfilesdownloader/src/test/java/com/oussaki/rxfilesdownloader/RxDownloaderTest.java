@@ -11,14 +11,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
-import java.io.File;
-import java.util.List;
-import java.util.Map;
-
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import io.reactivex.Single;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotEquals;
 
@@ -44,7 +36,7 @@ public class RxDownloaderTest {
         String url3 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/x-trail/product_code/product_version/overview/14TDI_ROGb004x.jpg";
         rxDownloader = new RxDownloader.Builder(context)
                 .setStorage(RxStorage.DATA_DIRECTORY)
-                .setStrategy(Strategy.ASYNC)
+                .setStrategy(DownloadStrategy.ASYNC)
                 .addFile("file1", url)
                 .addFile(url3)
                 .addFile(url2)

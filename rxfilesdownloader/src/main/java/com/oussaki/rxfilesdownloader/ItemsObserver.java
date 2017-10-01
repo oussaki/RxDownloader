@@ -17,61 +17,78 @@ public class ItemsObserver implements Observer<FileContainer> {
     List<FileContainer> filesContainer;
     String TAG = "ItemsObserver";
 
-    IDownloadProgress iDownloadProgress;
     RxStorage rxStorage;
+    OnStart onStart;
+    OnError onError;
+    OnComplete onComplete;
+    OnProgress onProgress;
 
     public ItemsObserver(RxStorage rxStorage) {
         this.rxStorage = rxStorage;
     }
 
-    public void setiDownloadProgress(IDownloadProgress iDownloadProgress) {
-        this.iDownloadProgress = iDownloadProgress;
+    public void onStart(OnStart onStart) {
+        this.onStart = onStart;
     }
+
+    public void onError(OnError onError) {
+        this.onError = onError;
+    }
+
+    public void onComplete(OnComplete onComplete) {
+        this.onComplete = onComplete;
+    }
+
+    public void onProgress(OnProgress onProgress) {
+        this.onProgress = onProgress;
+    }
+
 
     @Override
     public void onSubscribe(Disposable d) {
         filesContainer = new ArrayList<>();
         // UI interaction and initialization
-        if (iDownloadProgress != null) {
-            iDownloadProgress.OnStart();
-        }
+        if (onStart != null)
+            onStart.run();
+
         Log.d(TAG, " First onSubscribe : " + d.isDisposed());
     }
 
     @Override
     public void onNext(FileContainer fileContainer) {
-        Log.e(TAG,"Im inside on next");
-        try {
-            if (rxStorage != null) {
-                rxStorage.saveToFile(fileContainer.getBytes(), fileContainer.getFile()); // save file
-                Log.d(TAG, " First onNext value : " + fileContainer.getFile().getName());
-                filesContainer.add(fileContainer);
-                if (iDownloadProgress != null)
-                    Log.e(TAG,"Idownload is not null");
-                else if(iDownloadProgress == null)
-                    Log.e(TAG,"iDownloadProgress is NULL");
+        Log.e(TAG, "Im inside on next");
+        if (fileContainer.isSuccessed()) {
+            try {
+                if (rxStorage != null) {
+                    rxStorage.saveToFile(fileContainer.getBytes(), fileContainer.getFile()); // save file
+                    Log.d(TAG, " First onNext value : " + fileContainer.getFile().getName());
+                    filesContainer.add(fileContainer);
 
-                if (iDownloadProgress != null)
-                    iDownloadProgress.OnProgress(fileContainer.getProgress());
-            } else {
-                onError(new IllegalStateException("RxStorage is not initialized"));
+                    if (onProgress != null)
+                        onProgress.run(fileContainer.getProgress());
+                } else {
+                    onError(new IllegalStateException("RxStorage is not initialized"));
+                }
+            } catch (IOException e) {
+                onError(new IllegalStateException("Can't not save file:" + fileContainer.getFile().getName()));
             }
-        } catch (IOException e) {
-            onError(new IllegalStateException("Can't not save file:" + fileContainer.getFile().getName()));
-        }
+        } else
+            onError(new IllegalStateException("Can't not download the file:"));
     }
 
     @Override
     public void onError(Throwable e) {
-        Log.d(TAG, " First onError : " + e.getMessage());
-        if (iDownloadProgress != null)
-            iDownloadProgress.OnError(e);
+        Log.d(TAG, " First onError : ");
+        if (e == null)
+            if (onError != null)
+                onError.run(e);
     }
 
     @Override
     public void onComplete() {
         Log.d(TAG, "Download Complete");
-        if (iDownloadProgress != null)
-            iDownloadProgress.OnComplete();
+//        if (filesContainer.size() > 0)
+            if (onComplete != null)
+                onComplete.run();
     }
 }

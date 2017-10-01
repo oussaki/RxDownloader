@@ -7,9 +7,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.oussaki.rxfilesdownloader.IDownloadProgress;
 import com.oussaki.rxfilesdownloader.RxDownloader;
-import com.oussaki.rxfilesdownloader.Strategy;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -19,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -55,6 +54,15 @@ public class Main extends AppCompatActivity {
     OkHttpClient ok = new OkHttpClient();
     int done = 0;
 
+    private void streams() {
+        Observable.interval(1, TimeUnit.SECONDS)
+                .map(input -> {
+                    throw new IOException();
+                })
+                .onErrorReturn(error -> "Uh oh")
+                .subscribe(System.out::println);
+    }
+
     private void Sample() {
         new RxDownloader.Builder(this)
                 .addFile(url)
@@ -65,38 +73,30 @@ public class Main extends AppCompatActivity {
                 .addFile("file2", url2)
                 .addFile(url3)
                 .build()
-                .addProgressListeners(new IDownloadProgress() {
-
-                    @Override
-                    public void OnStart() {
-                        Log.d("aa", "init Progress called");
-                        progressBar.setProgress(0);
-                        txtProgress.setText("About to start downloading...");
-
-                    }
-
-                    @Override
-                    public void OnProgress(int progress) {
-                        Log.d("OnProgress", "Called" + progress);
-                        progressBar.setProgress(progress);
-                        multiline.append("\n Progress " + progress);
-                        txtProgress.setText("Progress: " + progress + "%");
-                    }
-
-                    @Override
-                    public void OnComplete() {
-                        txtProgress.setText("Download finish successfully");
-                        Log.e("ddd", "Finish");
-                    }
-
-                    @Override
-                    public void OnError(Throwable throwable) {
-
-                    }
+                .doOnStart(() -> {
+                    progressBar.setProgress(0);
+                    multiline.setText("");
+                    txtProgress.setText("About to start downloading");
+                })
+                .doOnProgress(progress -> {
+                    progressBar.setProgress(progress);
+                    multiline.append("\n Progress " + progress);
+                    txtProgress.setText("Progress: " + progress + "%");
+                })
+                .doOnError(throwable -> {
+                    multiline.append("\n " + throwable.getMessage());
+                })
+                .doOnComplete(() -> {
+                    txtProgress.setText("Download finished successfully");
                 })
                 .asList()
                 .subscribe((entries, throwable) -> {
-                    Log.e(TAG, "entries" + entries.size());
+                    Log.e(TAG, "Files count:" + entries.size());
+                    entries.forEach(fileContainer -> {
+                        if (fileContainer.isSuccessed()) {
+                            Log.e(TAG, "File: " + fileContainer.getFile().getName() + "status:" + fileContainer.isSuccessed());
+                        }
+                    });
                 });
     }
 
@@ -361,7 +361,7 @@ public class Main extends AppCompatActivity {
         txtProgress = (TextView) findViewById(R.id.progress);
         multiline = (EditText) findViewById(R.id.multiline);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        findViewById(R.id.sync).setOnClickListener(view -> doSomeWork());
+        findViewById(R.id.sync).setOnClickListener(view -> streams());
         findViewById(R.id.Async).setOnClickListener(view -> Sample());
     }
 
