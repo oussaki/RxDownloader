@@ -7,15 +7,20 @@ import android.util.Log;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.ReplaySubject;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
@@ -28,30 +33,30 @@ public class RxDownloader {
     Context context;
     int errors = 0;
     int size;
+    int remains;
     private OkHttpClient client;
     private int STRATEGY;
     private File STORAGE;
-    private HashMap<String, String> files;
+    private List<FileContainer> files;
     private IDownloadProgress iDownloadProgress;
     private int downloaded = 0;
+    ReplaySubject<FileContainer> subject;
+    ItemsObserver itemsObserver;
+    RxStorage rxStorage;
 
     RxDownloader(final Builder builder) {
         Log.i(TAG, "Constructor");
+        this.context = builder.context;
         this.client = builder.client;
         this.STRATEGY = builder.STRATEGY;
-        this.files = new HashMap<>(builder.files.size());
-        this.files.putAll(builder.files);
+        this.files = new ArrayList<>(builder.files.size());
+        this.files.addAll(builder.files);
         this.STORAGE = builder.STORAGE;
-    }
 
+        this.subject = ReplaySubject.create();
+        this.rxStorage = builder.rxStorage;
+        this.itemsObserver = new ItemsObserver(rxStorage);
 
-
-
-
-
-    public RxDownloader OnDownloadComplete(Consumer<? super Object> onNext){
-
-        return this;
     }
 
     /**
@@ -63,8 +68,9 @@ public class RxDownloader {
      * @param iDownloadProgress
      * @return
      */
-    public RxDownloader setListeners(IDownloadProgress iDownloadProgress) {
+    public RxDownloader addProgressListeners(IDownloadProgress iDownloadProgress) {
         this.iDownloadProgress = iDownloadProgress;
+        this.itemsObserver.setiDownloadProgress(this.iDownloadProgress);
         return this;
     }
 
@@ -82,79 +88,70 @@ public class RxDownloader {
     }
 
     /**
-     * Download a file
+     * Download a file from using an HTTP client
      *
-     * @param filename
-     * @return
+     * @param url
+     * @return byte[]
      */
-    private Observable<Flowable<File>> DownloadAFile(final String filename) {
-
-        final String fileurl = files.get(filename);
-        final File file = new File(STORAGE + File.separator + filename);
-        if (file.exists())
-            Log.d(TAG, "This file exists");
-        final Request request = new Request.Builder()
-                .url(fileurl)
-                .build();
-        return Observable
-                .fromCallable(() -> client.newCall(request))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnError(throwable -> Log.e(TAG, "Error", throwable))
-                .map(call -> {
-                    final FlowableCallback callback = new FlowableCallback();
-                    call.enqueue(callback);
-                    return callback.getObservable()
-                            .doOnNext(response -> {
-                                try {
-                                    final InputStream inputStream = response.body().byteStream();
-                                    current_thread();
-                                    saveToFile(inputStream, file);
-                                    Log.d(TAG, "file saved");
-                                } catch (IOException io) {
-                                    Log.e(TAG, "IOException" + io.getMessage());
-//                                            errors++;
-                                }
-                            })
-                            .doOnComplete(() -> {
-                                downloaded++;
-                                Log.d(TAG, "dooncomplete increment downloads to:" + downloaded);
-                            })
-                            .map(response -> {
-                                current_thread();
-                                return file;
-                            });
-//                            .subscribe();
-                })
-                .doOnComplete(() -> {
-                    int progress = Math.abs((downloaded * 100) / size);
-                    Log.i(TAG, filename + " just downloaded, progress is :"
-                            + progress + " " + (this.STRATEGY == Strategy.ASYNC ? "Async" : "Sync"));
-
-                    if (!isNull(iDownloadProgress) && progress != 100) {
-                        current_thread();
-                        iDownloadProgress.OnProgress(progress);
-                    }
-
-                    if (progress == 100) {
-                        current_thread();
-                        iDownloadProgress.OnFinish();
-                    }
-
-                });
-//                .map(flowable -> {
-//                    flowable.toFuture().get();
-//                    current_thread();
-//                    Log.d(TAG, "Maping files " + filename + ",path" + file.getPath());
-//                    return new AbstractMap.SimpleEntry<>(files.get(filename), file);
-//                })
-//                ;
+    byte[] downloadFile(String url) throws IOException {
+        return client.newCall(new Request.Builder().url(url).build()).execute().body().bytes();
     }
 
 
+    FileContainer produceFileContainerFromBytes(byte[] bytes, FileContainer emptyContainer) {
+        current_thread();
+        final String filename = emptyContainer.getFilename();
+//        isNull(context);
+        final File file = new File(context.getCacheDir() + File.separator + filename);
+        int progress = 0;
+        if (size > 0)
+            progress = Math.abs(((remains * 100) / size) - 100);
 
+        emptyContainer.setBytes(bytes);
+        emptyContainer.setProgress(progress);
+        emptyContainer.setFile(file);
+        Log.e(TAG, "Empty container return");
+        return emptyContainer;
+    }
 
+    private void publishContainer(FileContainer fileContainer) {
+        current_thread();
+        subject.onNext(fileContainer);
+        Log.e(TAG, "publishContainer on next subject");
+        if (remains == 0) {
+            Log.i(TAG, remains + " i will throw on complete");
+            subject.onComplete();
+        }
+    }
 
+    private void publishDownloadError(byte[] bytes) {
+        if (bytes.length == 1) {
+            subject.onError(new IOException("Can not download the file"));
+        }
+        remains--;
+    }
+
+    /**
+     * Get an observable of one file downloader
+     *
+     * @param fileContainer
+     * @return
+     */
+    private Observable<FileContainer> ObservableFileDownloader(final FileContainer fileContainer) {
+        return Observable
+                .fromCallable(() -> downloadFile(fileContainer.getUrl()))
+                .onErrorReturn(throwable -> {
+                    Log.e(TAG, "throwable");
+                    byte[] b = new byte[1];
+                    Log.e(TAG, "b.length:" + b.length);
+                    return b;
+                })
+                .subscribeOn(Schedulers.io())
+                .doOnNext(bytes -> publishDownloadError(bytes))
+                .map(bytes -> produceFileContainerFromBytes(bytes, fileContainer))
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(fileContainerOnNext -> publishContainer(fileContainerOnNext));
+    }
 
     /**
      * Downloading the files Asynchronously
@@ -162,8 +159,8 @@ public class RxDownloader {
      * @param observable
      * @return
      */
-    private Observable<Flowable<File>> AsyncDownloading(Observable<String> observable) {
-        return observable.flatMap(fileurl -> DownloadAFile(fileurl));
+    private Observable<FileContainer> parallelDownloading(Observable<FileContainer> observable) {
+        return observable.flatMap(fileContainer -> ObservableFileDownloader(fileContainer));
     }
 
     /**
@@ -172,8 +169,8 @@ public class RxDownloader {
      * @param observable
      * @return
      */
-    public Observable<Observable<Flowable<File>>> SyncDownloading(Observable<String> observable) {
-        return observable.map(fileurl -> DownloadAFile(fileurl));
+    public Observable<Observable<FileContainer>> sequentialDownloading(Observable<FileContainer> observable) {
+        return observable.map(fileContainer -> ObservableFileDownloader(fileContainer));
     }
 
     /**
@@ -181,35 +178,39 @@ public class RxDownloader {
      *
      * @return
      */
-    public Observable<Map.Entry<String, File>> asObservable() {
-        size = files.size();
-        Observable observable = Observable.fromIterable(files.keySet())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .doOnSubscribe(disposable -> {
-                    // you can init here
-                    if (!isNull(iDownloadProgress))
-                        iDownloadProgress.initProgress();
-                }).doFinally(() -> {
-//                    if (!isNull(iDownloadProgress))
-//                        iDownloadProgress.OnFinish();
-                });
+    public Single<List<FileContainer>> asList() {
 
-        if (STRATEGY == Strategy.ASYNC)
-            return AsyncDownloading(observable);
-        else
-            return SyncDownloading(observable);
+        this.subject.subscribe(this.itemsObserver);
+
+        this.size = this.files.size();
+        this.remains = this.size;
+        Observable<FileContainer> observable = Observable
+                .fromIterable(this.files)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io());
+
+//        if (STRATEGY == Strategy.PARALLEL)
+        observable = parallelDownloading(observable);
+//        else
+//            observable = sequentialDownloading(observable).toList()
+
+        return observable.toList();
     }
 
+
+    /*
+    * Builder Class
+    * */
     public static final class Builder {
         Context context;
         OkHttpClient client;
         int STRATEGY;
         File STORAGE;
+        RxStorage rxStorage;
         /**
          * HashMap of files to be downloaded
          */
-        HashMap<String, String> files;
+        List<FileContainer> files;
 
         /**
          * @param context The context
@@ -220,8 +221,9 @@ public class RxDownloader {
             client = new OkHttpClient.Builder()
                     .connectTimeout(30, TimeUnit.SECONDS)
                     .build();
-            files = new HashMap<>();
+            files = new ArrayList<>();
             this.STORAGE = context.getCacheDir();
+            this.rxStorage = new RxStorage(context);
             Log.i("RxDownloader", "Builder Constructor called");
         }
 
@@ -232,7 +234,7 @@ public class RxDownloader {
          * @param client and Okhttp instance
          * @return Builder
          */
-        Builder setClient(@NonNull OkHttpClient client) {
+        Builder client(@NonNull OkHttpClient client) {
             if (client != null)
                 this.client = client;
             return this;
@@ -245,7 +247,7 @@ public class RxDownloader {
          * @param strategy
          * @return Builder
          */
-        public Builder setStrategy(int strategy) {
+        public Builder strategy(int strategy) {
             STRATEGY = strategy;
             return this;
         }
@@ -262,7 +264,7 @@ public class RxDownloader {
             String extesion = "";
             if (newName.indexOf(".") < 0)
                 extesion = ExtractExtension(url);
-            files.put(newName + extesion, url);
+            files.add(new FileContainer(url, newName + extesion));
             return this;
         }
 
@@ -295,7 +297,7 @@ public class RxDownloader {
          */
         public Builder addFile(String url) {
             String name = ExtractNameAndExtension(url);
-            files.put(name, url);
+            files.add(new FileContainer(url, name));
             return this;
         }
 
@@ -305,7 +307,7 @@ public class RxDownloader {
          * @param STORAGE
          * @return Builder
          */
-        public Builder setStorage(int STORAGE) {
+        public Builder storage(int STORAGE) {
             if (STORAGE == RxStorage.DATA_DIRECTORY)
                 this.STORAGE = context.getCacheDir();
             else if (STORAGE == RxStorage.EXTERNAL_CACHE_DIR)
@@ -319,8 +321,8 @@ public class RxDownloader {
          * @param files
          * @return Builder
          */
-        public Builder addFiles(HashMap<String, String> files) {
-            this.files.putAll(files);
+        public Builder addFiles(List<FileContainer> files) {
+            this.files.addAll(files);
             return this;
         }
 

@@ -61,4 +61,11 @@ public class FileContainer {
     public void setBytes(byte[] bytes) {
         this.bytes = bytes;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        FileContainer f = (FileContainer) obj;
+        return (f.getFile().equals(getFile()) && f.getUrl().equals(getUrl()) && f.getBytes().equals(getBytes()));
+    }
+
 }

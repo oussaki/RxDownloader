@@ -51,18 +51,23 @@ public class RxDownloaderTest {
                 .build()
                 .setListeners(new IDownloadProgress() {
                     @Override
-                    public void initProgress() {
-                        Log.i(TAG, "init Progress ");
+                    public void OnStart() {
+
                     }
 
                     @Override
                     public void OnProgress(int progress) {
-                        Log.i(TAG, "OnProgress " + progress);
+
                     }
 
                     @Override
-                    public void OnFinish() {
-                        Log.i(TAG, "OnFinish");
+                    public void OnComplete() {
+
+                    }
+
+                    @Override
+                    public void OnError(Throwable throwable) {
+
                     }
                 });
     }

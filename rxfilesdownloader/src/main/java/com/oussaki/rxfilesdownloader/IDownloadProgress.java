@@ -5,7 +5,12 @@ package com.oussaki.rxfilesdownloader;
  */
 
 public interface IDownloadProgress {
-    void initProgress();
+    void OnStart();
+
     void OnProgress(int progress);
-    void OnFinish();
+
+    void OnComplete();
+
+    void OnError(Throwable throwable);
+
 }

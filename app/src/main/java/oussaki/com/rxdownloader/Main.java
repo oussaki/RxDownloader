@@ -55,9 +55,8 @@ public class Main extends AppCompatActivity {
     OkHttpClient ok = new OkHttpClient();
     int done = 0;
 
-    private void Sample(int strategy) {
-        new RxDownloader.Builder(getApplicationContext())
-                .setStrategy(strategy)
+    private void Sample() {
+        new RxDownloader.Builder(this)
                 .addFile(url)
                 .addFile("video", aVideo)
                 .addFile("videoxssda", aVideo)
@@ -66,31 +65,36 @@ public class Main extends AppCompatActivity {
                 .addFile("file2", url2)
                 .addFile(url3)
                 .build()
-                .setListeners(new IDownloadProgress() {
+                .addProgressListeners(new IDownloadProgress() {
+
                     @Override
-                    public void initProgress() {
+                    public void OnStart() {
                         Log.d("aa", "init Progress called");
                         progressBar.setProgress(0);
                         txtProgress.setText("About to start downloading...");
+
                     }
 
                     @Override
                     public void OnProgress(int progress) {
                         Log.d("OnProgress", "Called" + progress);
                         progressBar.setProgress(progress);
-//                        multiline.append("\n Progress " + i);
-//                        txtProgress.setText("Progress: " + i + "%");
+                        multiline.append("\n Progress " + progress);
+                        txtProgress.setText("Progress: " + progress + "%");
                     }
 
                     @Override
-                    public void OnFinish() {
+                    public void OnComplete() {
                         txtProgress.setText("Download finish successfully");
                         Log.e("ddd", "Finish");
+                    }
+
+                    @Override
+                    public void OnError(Throwable throwable) {
 
                     }
                 })
-                .asObservable()
-                .toList()
+                .asList()
                 .subscribe((entries, throwable) -> {
                     Log.e(TAG, "entries" + entries.size());
                 });
@@ -232,8 +236,9 @@ public class Main extends AppCompatActivity {
 
     private void doSomeWork() {
 
-        ReplaySubject<Tuple> subject= ReplaySubject.create();
+        ReplaySubject<Tuple> subject = ReplaySubject.create();
         Observer<Tuple> tupleObserver = getFirstObserver();
+
         subject.subscribe(tupleObserver);
 
         List<Tuple> tuples = new ArrayList<>();
@@ -243,7 +248,6 @@ public class Main extends AppCompatActivity {
         tuples.add(new Tuple(url2, "file2.jpg"));
         tuples.add(new Tuple(url, "filey.jpg"));
         tuples.add(new Tuple(url, "filex.jpg"));
-
 
         size = tuples.size();
         done = size;
@@ -350,7 +354,6 @@ public class Main extends AppCompatActivity {
     }
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -358,8 +361,8 @@ public class Main extends AppCompatActivity {
         txtProgress = (TextView) findViewById(R.id.progress);
         multiline = (EditText) findViewById(R.id.multiline);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        findViewById(R.id.sync).setOnClickListener(view -> Sample(Strategy.SYNC));
-        findViewById(R.id.Async).setOnClickListener(view -> doSomeWork());
+        findViewById(R.id.sync).setOnClickListener(view -> doSomeWork());
+        findViewById(R.id.Async).setOnClickListener(view -> Sample());
     }
 
     class Tuple {

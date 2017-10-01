@@ -5,7 +5,7 @@ package com.oussaki.rxfilesdownloader;
  */
 
 public class Strategy {
-    public static int ASYNC = 1;
-    public static int SYNC = 2;
-    public static int DEFAULT = ASYNC;
+    public static int PARALLEL = 1;
+    public static int SECQUENTIAL = 2;
+    public static int DEFAULT = SECQUENTIAL;
 }
