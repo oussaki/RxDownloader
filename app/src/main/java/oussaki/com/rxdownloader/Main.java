@@ -20,7 +20,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -74,14 +73,14 @@ public class Main extends AppCompatActivity {
                 .addFile("vxidaseo", aVideo)
                 .addFile("file2", url2)
                 .addFile("videoxssda", aVideo)
-                .addFile("vxidaseo", aVideo)
+                .addFile("vxidaseo", "http://goolpanitchugos.com/j.jpg")
                 .addFile("file2", url2)
                 .addFile("videoxssda", aVideo)
                 .addFile("vidaseo", "http://goolpanitchugo.com/j.jpg")
                 .addFile("vxidaseo", aVideo)
                 .addFile("file2", url2)
                 .addFile(url3)
-                .strategy(DownloadStrategy.ALL)
+                .strategy(DownloadStrategy.MAX)
                 .build()
                 .doOnStart(() -> {
                     progressBar.setProgress(0);
@@ -107,9 +106,9 @@ public class Main extends AppCompatActivity {
                     Log.e(TAG, "Files count:" + entries.size());
                     // Showing the list of files
                     for (FileContainer fileContainer : entries) {
-                        if (fileContainer.isSuccessed()) {
+                        if (fileContainer.isSucceed()) {
                             Log.e(TAG, "File: " + fileContainer.getFile().getName()
-                                    + "status:" + fileContainer.isSuccessed()
+                                    + "status:" + fileContainer.isSucceed()
                                     + ", is there Bytes ? " + (fileContainer.getBytes() == null));
                         }
                     }

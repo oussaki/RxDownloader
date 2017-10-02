@@ -33,13 +33,11 @@ public class ExampleInstrumentedTest {
         String url2 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg";
         String url3 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/x-trail/product_code/product_version/overview/14TDI_ROGb004x.jpg";
         rxDownloader = new RxDownloader.Builder(context)
-//                .setStorage(RxStorage.DATA_DIRECTORY)
-//                .setStrategy(DownloadStrategy.ASYNC)
+                .strategy(DownloadStrategy.MAX)
                 .addFile("file1", url)
                 .addFile(url3)
                 .addFile(url2)
-                .build()
-        ;
+                .build();
     }
 
 
@@ -50,7 +48,7 @@ public class ExampleInstrumentedTest {
 
     @Test
     public void IsDownloadingAsyncFiles() throws Exception {
-        List<FileContainer> res = rxDownloader.asList().toObservable().blockingFirst();
+        List<FileContainer> res = rxDownloader.asList().blockingGet();
         res.forEach(fileContainer -> {
             Log.i("RxDownloader", "key" + fileContainer.getFilename() + ",value " + fileContainer.getUrl());
         });

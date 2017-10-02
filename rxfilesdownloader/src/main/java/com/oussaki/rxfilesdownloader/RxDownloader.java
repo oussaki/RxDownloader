@@ -43,6 +43,7 @@ public class RxDownloader {
     private File STORAGE;
     private List<FileContainer> files;
     private int downloaded = 0;
+    private boolean canceled = false;
 
     RxDownloader(final Builder builder) {
 
@@ -132,8 +133,13 @@ public class RxDownloader {
 
     FileContainer produceFileContainerFromBytes(final byte[] bytes, final FileContainer emptyContainer) {
         current_thread();
-        Log.d(TAG, "fileContainer success" + emptyContainer.isSuccessed());
-        if (emptyContainer.isSuccessed()) {
+        Log.d(TAG, "fileContainer success" + emptyContainer.isSucceed());
+        if (canceled && emptyContainer.isSucceed()) {
+            /*
+            * Canceled file want be considered as downloaded files ( Ignored )
+            * */
+            emptyContainer.setCanceled(true); // to help filtration in ALL Strategy
+        } else if (emptyContainer.isSucceed() && !canceled) {
             final String filename = emptyContainer.getFilename();
             final File file = new File(context.getCacheDir() + File.separator + filename);
             int progress = 0;
@@ -150,7 +156,7 @@ public class RxDownloader {
 
     private void publishContainer(FileContainer fileContainer) {
         current_thread();
-        if (fileContainer.isSuccessed())
+        if (fileContainer.isSucceed())
             subject.onNext(fileContainer);
 
         Log.e(TAG, "publishContainer on next subject");
@@ -165,13 +171,20 @@ public class RxDownloader {
         }
     }
 
+    private void catchCanceling(byte[] bytes) {
+        // cancel only if the strategy is ALL strategy
+        if (bytes.length == 1 && STRATEGY == DownloadStrategy.ALL)
+            canceled = true;
+    }
+
     private void catchDownloadError(byte[] bytes, FileContainer fileContainer) {
         if (bytes.length == 1) {
             errors++;
-            fileContainer.setSuccessed(false);
+            fileContainer.setSucceed(false);
+
         } else {
             downloaded++; // this variable is only for testing
-            fileContainer.setSuccessed(true);
+            fileContainer.setSucceed(true);
         }
 
         remains--;
@@ -179,7 +192,7 @@ public class RxDownloader {
 
 
     private void handleDownloadError(FileContainer fileContainer) throws IOException {
-        if (!fileContainer.isSuccessed())
+        if (!fileContainer.isSucceed())
             throw new IOException("Can not download the file " + fileContainer.getFilename());
     }
 
@@ -201,6 +214,7 @@ public class RxDownloader {
                 })
                 .subscribeOn(Schedulers.io())
                 .doOnNext(bytes -> catchDownloadError(bytes, fileContainer))
+                .doOnNext(bytes -> catchCanceling(bytes))
                 .map(bytes -> produceFileContainerFromBytes(bytes, fileContainer))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(fileContainerError -> handleDownloadError(fileContainerError));
@@ -211,9 +225,7 @@ public class RxDownloader {
             observable = maxStrategy(observable, fileContainer);
 
         return observable.doOnNext(fileContainerOnNext -> publishContainer(fileContainerOnNext))
-                .filter(fileContainer1 -> {
-                    return fileContainer1.isSuccessed();
-                });
+                .filter(fileContainer1 -> fileContainer1.isSucceed() && !fileContainer1.isCanceled());
     }
 
     private Observable<FileContainer> maxStrategy(Observable<FileContainer> observable, FileContainer fileContainer) {
@@ -257,27 +269,19 @@ public class RxDownloader {
 
 
     /**
-     * Converts the downloaded files to be observable and consumed reactively
+     * Converts the downloaded files to be observable and consumed Reactively
      *
      * @return
      */
     public Single<List<FileContainer>> asList() {
-
         this.subject.subscribe(this.itemsObserver);
-
         this.size = this.files.size();
         this.remains = this.size;
         Observable<FileContainer> observable = Observable
                 .fromIterable(this.files)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io());
-
-//        if (STRATEGY == DownloadStrategy.PARALLEL)
-        observable = parallelDownloading(observable);
-//        else
-//            observable = sequentialDownloading(observable).toList()
-
-        return observable.toList();
+        return parallelDownloading(observable).toList();
     }
 
 
@@ -325,7 +329,7 @@ public class RxDownloader {
 
         /**
          * Set strategy for downloading files
-         * (asynchronous , synchronous)
+         * (MAX or ALL)
          *
          * @param strategy
          * @return Builder

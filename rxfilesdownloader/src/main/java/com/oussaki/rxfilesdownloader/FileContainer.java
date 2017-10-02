@@ -13,7 +13,8 @@ public class FileContainer {
 
     String filename;
     String url;
-    boolean successed = false;
+    boolean succeed = false;
+    boolean canceled = false;
 
     FileContainer(String url, String filename) {
         this.url = url;
@@ -24,12 +25,20 @@ public class FileContainer {
 
     }
 
-    public boolean isSuccessed() {
-        return successed;
+    public boolean isCanceled() {
+        return canceled;
     }
 
-    public void setSuccessed(boolean successed) {
-        this.successed = successed;
+    public void setCanceled(boolean canceled) {
+        this.canceled = canceled;
+    }
+
+    public boolean isSucceed() {
+        return succeed;
+    }
+
+    public void setSucceed(boolean successed) {
+        this.succeed = successed;
     }
 
     public String getUrl() {
@@ -69,7 +78,7 @@ public class FileContainer {
     }
 
     public void setBytes(byte[] bytes) {
-        successed = true;
+        succeed = true;
         this.bytes = bytes;
     }
 

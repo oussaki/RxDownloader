@@ -24,7 +24,7 @@ public class DownloadStrategy {
     public static int ALL = 2;
 
     /*
-    * Definition: <p>Default Flag </p>
+    * Definition: <p> Default Flag </p>
     * */
     public static int DEFAULT = MAX;
 }

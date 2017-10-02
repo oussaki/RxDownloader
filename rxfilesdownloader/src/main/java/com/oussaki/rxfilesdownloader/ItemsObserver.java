@@ -2,6 +2,8 @@ package com.oussaki.rxfilesdownloader;
 
 import android.util.Log;
 
+import com.koushikdutta.async.future.Cancellable;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +25,6 @@ public class ItemsObserver implements Observer<FileContainer> {
     OnCompleteWithSuccess onCompleteWithSuccess;
     OnCompleteWithError onCompleteWithError;
     OnProgress onProgress;
-
 
     public ItemsObserver(RxStorage rxStorage) {
         this.rxStorage = rxStorage;
@@ -63,7 +64,7 @@ public class ItemsObserver implements Observer<FileContainer> {
     @Override
     public void onNext(FileContainer fileContainer) {
         Log.e(TAG, "Im inside on next");
-        if (fileContainer.isSuccessed()) {
+        if (fileContainer.isSucceed()) {
             try {
                 if (rxStorage != null) {
                     rxStorage.saveToFile(fileContainer.getBytes(), fileContainer.getFile()); // save file

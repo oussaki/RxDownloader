@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,7 +12,8 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.List;
+
 import static org.junit.Assert.assertNotEquals;
 
 /**
@@ -24,6 +26,7 @@ import static org.junit.Assert.assertNotEquals;
         manifest = "build/intermediates/manifests/aapt/debug/AndroidManifest.xml")
 public class RxDownloaderTest {
     RxDownloader rxDownloader;
+    RxDownloader.Builder builder;
     Context context;
     String TAG = "Tests";
 
@@ -34,44 +37,34 @@ public class RxDownloaderTest {
         String url = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg.ximg.m_12_m.smart.jpg";
         String url2 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg";
         String url3 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/x-trail/product_code/product_version/overview/14TDI_ROGb004x.jpg";
-        rxDownloader = new RxDownloader.Builder(context)
-                .setStorage(RxStorage.DATA_DIRECTORY)
-                .setStrategy(DownloadStrategy.ASYNC)
+        builder = new RxDownloader.Builder(context)
                 .addFile("file1", url)
                 .addFile(url3)
-                .addFile(url2)
-                .build()
-                .setListeners(new IDownloadProgress() {
-                    @Override
-                    public void OnStart() {
-
-                    }
-
-                    @Override
-                    public void OnProgress(int progress) {
-
-                    }
-
-                    @Override
-                    public void OnComplete() {
-
-                    }
-
-                    @Override
-                    public void OnError(Throwable throwable) {
-
-                    }
-                });
+                .addFile(url2);
     }
 
     @Test
-    public void IsDownloadingAsyncFiles() throws Exception {
-//        Single<List<Map.Entry<String, File>>> obs = rxDownloader.asObservable().toList();
-//        List<Map.Entry<String, File>> res = obs.blockingGet();
-//        for (int i = 0; i < res.size(); i++) {
-//            Log.i("RxDownloader", "key" + res.get(i).getKey() + ",value " + res.get(i).getValue());
-//        }
-//        assertNotEquals(res.size(), 0);
-//        assertThat(res.size()).isEqualTo(3);
+    public void isMaxStrategyworks() throws Exception {
+        rxDownloader = builder
+                .strategy(DownloadStrategy.MAX)
+                .addFile("http://fakeURL.com/error-file.jpg")
+                .build();
+
+        List<FileContainer> res = rxDownloader.asList().blockingGet();
+        res.forEach(fileContainer -> {
+            Log.i("RxDownloader", "key" + fileContainer.getFilename() + ",value " + fileContainer.getUrl());
+        });
+        assertNotEquals(res.size(), 0);
+        Assert.assertEquals(res.size(), 3);
+    }
+
+    @Test
+    public void isAllStrategyworks() throws Exception {
+        rxDownloader = builder
+                .strategy(DownloadStrategy.ALL)
+                .addFile("http://fakeURL.com/error-file2.jpg")
+                .build();
+        List<FileContainer> res = rxDownloader.asList().blockingGet();
+        Assert.assertEquals(res.size(), 0);
     }
 }
