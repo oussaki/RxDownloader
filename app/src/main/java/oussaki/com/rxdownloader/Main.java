@@ -71,7 +71,13 @@ public class Main extends AppCompatActivity {
                 .addFile(url)
                 .addFile("video", aVideo)
                 .addFile("videoxssda", aVideo)
-                .addFile("vidaseo", url3  /*"http://goolpanitchugo.com/j.jpg"*/ )
+                .addFile("vxidaseo", aVideo)
+                .addFile("file2", url2)
+                .addFile("videoxssda", aVideo)
+                .addFile("vxidaseo", aVideo)
+                .addFile("file2", url2)
+                .addFile("videoxssda", aVideo)
+                .addFile("vidaseo", "http://goolpanitchugo.com/j.jpg")
                 .addFile("vxidaseo", aVideo)
                 .addFile("file2", url2)
                 .addFile(url3)
@@ -102,7 +108,9 @@ public class Main extends AppCompatActivity {
                     // Showing the list of files
                     for (FileContainer fileContainer : entries) {
                         if (fileContainer.isSuccessed()) {
-                            Log.e(TAG, "File: " + fileContainer.getFile().getName() + "status:" + fileContainer.isSuccessed());
+                            Log.e(TAG, "File: " + fileContainer.getFile().getName()
+                                    + "status:" + fileContainer.isSuccessed()
+                                    + ", is there Bytes ? " + (fileContainer.getBytes() == null));
                         }
                     }
 

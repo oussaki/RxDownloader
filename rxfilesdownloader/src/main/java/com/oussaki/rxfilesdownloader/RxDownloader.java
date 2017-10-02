@@ -57,11 +57,9 @@ public class RxDownloader {
         this.subject = ReplaySubject.create();
         this.rxStorage = builder.rxStorage;
         this.itemsObserver = new ItemsObserver(rxStorage);
-        subject
-                .doOnError(throwable -> {
-                    Log.d(TAG, "Do on error subject");
-                });
-
+//        subject.doOnError(throwable -> {
+//            Log.d(TAG, "Do on error subject");
+//        });
     }
 
     /*
@@ -171,11 +169,14 @@ public class RxDownloader {
         if (bytes.length == 1) {
             errors++;
             fileContainer.setSuccessed(false);
-        } else
+        } else {
+            downloaded++; // this variable is only for testing
             fileContainer.setSuccessed(true);
+        }
 
         remains--;
     }
+
 
     private void handleDownloadError(FileContainer fileContainer) throws IOException {
         if (!fileContainer.isSuccessed())
@@ -236,8 +237,10 @@ public class RxDownloader {
                     this.itemsObserver.onError(throwable);
                 })
                 .onErrorResumeNext(throwable -> {
+                    Log.d(TAG, "onErrorResumeNext all strategy");
                     throwable.onComplete();
 //                    this.subject.onCompleteWithSuccess();
+                    subject.onComplete();
                     this.itemsObserver.CompleteWithError();
                 });
     }
