@@ -11,7 +11,20 @@ public class DownloadStrategy {
     * 2 - Try to download all of them
     *
     * */
+
+    /*
+    * MAX: Flag means that the downloader will try to download all the files
+    * in case of errors it's will continue till the end
+    * */
     public static int MAX = 1;
+    /*
+    * ALL: Flag means that the downloader will try to download all the files
+    * but if it encountered an error it's will stop immediately
+    * */
     public static int ALL = 2;
+
+    /*
+    * Definition: <p>Default Flag </p>
+    * */
     public static int DEFAULT = MAX;
 }

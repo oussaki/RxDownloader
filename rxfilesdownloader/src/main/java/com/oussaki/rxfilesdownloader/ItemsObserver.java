@@ -20,8 +20,10 @@ public class ItemsObserver implements Observer<FileContainer> {
     RxStorage rxStorage;
     OnStart onStart;
     OnError onError;
-    OnComplete onComplete;
+    OnCompleteWithSuccess onCompleteWithSuccess;
+    OnCompleteWithError onCompleteWithError;
     OnProgress onProgress;
+
 
     public ItemsObserver(RxStorage rxStorage) {
         this.rxStorage = rxStorage;
@@ -35,8 +37,12 @@ public class ItemsObserver implements Observer<FileContainer> {
         this.onError = onError;
     }
 
-    public void onComplete(OnComplete onComplete) {
-        this.onComplete = onComplete;
+    public void onCompleteWithSuccess(OnCompleteWithSuccess onCompleteWithSuccess) {
+        this.onCompleteWithSuccess = onCompleteWithSuccess;
+    }
+
+    public void onCompleteWithError(OnCompleteWithError onCompleteWithError) {
+        this.onCompleteWithError = onCompleteWithError;
     }
 
     public void onProgress(OnProgress onProgress) {
@@ -78,17 +84,30 @@ public class ItemsObserver implements Observer<FileContainer> {
 
     @Override
     public void onError(Throwable e) {
-        Log.d(TAG, " First onError : ");
-        if (e == null)
+        Log.d(TAG, " ItemObserver onError : " + e.getMessage());
+        if (e != null)
             if (onError != null)
                 onError.run(e);
     }
 
+    public void CompleteWithError() {
+        // TO-DO
+        if (onCompleteWithError != null)
+            onCompleteWithError.run();
+        Log.d(TAG, "Download end-up with error");
+        onComplete();
+    }
+
+    public void CompleteWithSuccess() {
+        // TO-DO
+        if (onCompleteWithSuccess != null)
+            onCompleteWithSuccess.run();
+        Log.d(TAG, "Download Complete with success");
+        onComplete();
+    }
+
     @Override
     public void onComplete() {
-        Log.d(TAG, "Download Complete");
-//        if (filesContainer.size() > 0)
-            if (onComplete != null)
-                onComplete.run();
+
     }
 }

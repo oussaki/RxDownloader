@@ -34,7 +34,8 @@ public class RxDownloader {
     RxStorage rxStorage;
     OnStart onStart;
     OnError onError;
-    OnComplete onComplete;
+    OnCompleteWithSuccess onCompleteWithSuccess;
+    OnCompleteWithError onCompleteWithError;
     OnProgress onProgress;
     private OkHttpClient client;
     private int STRATEGY;
@@ -58,12 +59,15 @@ public class RxDownloader {
         this.itemsObserver = new ItemsObserver(rxStorage);
         subject
                 .doOnError(throwable -> {
-                    Log.d(TAG, "DO on error subject");
+                    Log.d(TAG, "Do on error subject");
                 });
 
     }
 
-    public RxDownloader doOnError(OnError action) {
+    /*
+    * Action to be taken when error thrown for one single file
+    * */
+    public RxDownloader doOnSingleError(OnError action) {
         this.onError = action;
         this.itemsObserver.onError(action);
         return this;
@@ -79,13 +83,23 @@ public class RxDownloader {
     }
 
     /**
-     * doOnComplete : When finally finish downloading files
+     * doOnCompleteWithSuccess : When successfully finish downloading all the files
      */
-    public RxDownloader doOnComplete(OnComplete action) {
-        this.onComplete = action;
-        this.itemsObserver.onComplete(action);
+    public RxDownloader doOnCompleteWithSuccess(OnCompleteWithSuccess action) {
+        this.onCompleteWithSuccess = action;
+        this.itemsObserver.onCompleteWithSuccess(action);
         return this;
     }
+
+    /**
+     * doOnCompleteWithError : When downloading ends with an error
+     */
+    public RxDownloader doOnCompleteWithError(OnCompleteWithError action) {
+        this.onCompleteWithError = action;
+        this.itemsObserver.onCompleteWithError(action);
+        return this;
+    }
+
 
     /**
      * doOnProgress(int progress) : On downloading files
@@ -143,15 +157,21 @@ public class RxDownloader {
 
         Log.e(TAG, "publishContainer on next subject");
         if (remains == 0) {
+            if (errors == 0)
+                this.itemsObserver.CompleteWithSuccess();
+            else
+                this.itemsObserver.CompleteWithError();
+
             Log.i(TAG, remains + " i will throw on complete");
-            subject.onComplete();
+//          subject.onCompleteWithSuccess(); // it was like this
         }
     }
 
     private void catchDownloadError(byte[] bytes, FileContainer fileContainer) {
-        if (bytes.length == 1)
+        if (bytes.length == 1) {
+            errors++;
             fileContainer.setSuccessed(false);
-        else
+        } else
             fileContainer.setSuccessed(true);
 
         remains--;
@@ -170,7 +190,7 @@ public class RxDownloader {
      * @return
      */
     private Observable<FileContainer> ObservableFileDownloader(final FileContainer fileContainer) {
-        return Observable
+        Observable<FileContainer> observable = Observable
                 .fromCallable(() -> downloadFile(fileContainer.getUrl()))
                 .onErrorReturn(throwable -> {
                     Log.e(TAG, "throwable");
@@ -182,13 +202,44 @@ public class RxDownloader {
                 .doOnNext(bytes -> catchDownloadError(bytes, fileContainer))
                 .map(bytes -> produceFileContainerFromBytes(bytes, fileContainer))
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(fileContainerError -> handleDownloadError(fileContainerError))
-                .onErrorReturn(error -> {
-                    Log.d(TAG, "ON error return");
-                    this.itemsObserver.onError.run(error);
-                    return fileContainer;
+                .doOnNext(fileContainerError -> handleDownloadError(fileContainerError));
+
+        if (STRATEGY == DownloadStrategy.ALL)
+            observable = allStrategy(observable);
+        else
+            observable = maxStrategy(observable, fileContainer);
+
+        return observable.doOnNext(fileContainerOnNext -> publishContainer(fileContainerOnNext))
+                .filter(fileContainer1 -> {
+                    return fileContainer1.isSuccessed();
+                });
+    }
+
+    private Observable<FileContainer> maxStrategy(Observable<FileContainer> observable, FileContainer fileContainer) {
+        Log.d(TAG, "Going to use max strategy");
+        return observable
+                .doOnError(throwable -> {
+                    Log.d(TAG, "doOnError");
+                    this.itemsObserver.onError(throwable);
                 })
-                .doOnNext(fileContainerOnNext -> publishContainer(fileContainerOnNext));
+                .onErrorReturn(error -> {
+                    Log.d(TAG, "onErrorReturn");
+                    return fileContainer;
+                });
+    }
+
+    private Observable<FileContainer> allStrategy(Observable<FileContainer> observable) {
+        Log.d(TAG, "Going to use all strategy");
+        return observable
+                .doOnError(throwable -> {
+                    Log.d(TAG, "doOnError");
+                    this.itemsObserver.onError(throwable);
+                })
+                .onErrorResumeNext(throwable -> {
+                    throwable.onComplete();
+//                    this.subject.onCompleteWithSuccess();
+                    this.itemsObserver.CompleteWithError();
+                });
     }
 
     /**
@@ -201,15 +252,6 @@ public class RxDownloader {
         return observable.flatMap(fileContainer -> ObservableFileDownloader(fileContainer));
     }
 
-    /**
-     * Downloading the files Synchronously
-     *
-     * @param observable
-     * @return
-     */
-    public Observable<Observable<FileContainer>> sequentialDownloading(Observable<FileContainer> observable) {
-        return observable.map(fileContainer -> ObservableFileDownloader(fileContainer));
-    }
 
     /**
      * Converts the downloaded files to be observable and consumed reactively
@@ -257,7 +299,7 @@ public class RxDownloader {
             this.context = context;
             STRATEGY = DownloadStrategy.DEFAULT;
             client = new OkHttpClient.Builder()
-                    .connectTimeout(5, TimeUnit.SECONDS)
+                    .connectTimeout(500, TimeUnit.MILLISECONDS)
                     .build();
             files = new ArrayList<>();
             this.STORAGE = context.getCacheDir();
@@ -267,9 +309,9 @@ public class RxDownloader {
 
 
         /**
-         * Set a custom Http Client (OkhttpClient )
+         * Set a custom Http Client (OkHttpClient )
          *
-         * @param client and Okhttp instance
+         * @param client and OkHttp instance
          * @return Builder
          */
         Builder client(@NonNull OkHttpClient client) {

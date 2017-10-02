@@ -7,6 +7,8 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.oussaki.rxfilesdownloader.DownloadStrategy;
+import com.oussaki.rxfilesdownloader.FileContainer;
 import com.oussaki.rxfilesdownloader.RxDownloader;
 
 import java.io.BufferedInputStream;
@@ -18,6 +20,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -68,10 +71,11 @@ public class Main extends AppCompatActivity {
                 .addFile(url)
                 .addFile("video", aVideo)
                 .addFile("videoxssda", aVideo)
-                .addFile("vidaseo", aVideo)
+                .addFile("vidaseo", url3  /*"http://goolpanitchugo.com/j.jpg"*/ )
                 .addFile("vxidaseo", aVideo)
                 .addFile("file2", url2)
                 .addFile(url3)
+                .strategy(DownloadStrategy.ALL)
                 .build()
                 .doOnStart(() -> {
                     progressBar.setProgress(0);
@@ -83,20 +87,25 @@ public class Main extends AppCompatActivity {
                     multiline.append("\n Progress " + progress);
                     txtProgress.setText("Progress: " + progress + "%");
                 })
-                .doOnError(throwable -> {
+                .doOnSingleError(throwable -> {
                     multiline.append("\n " + throwable.getMessage());
                 })
-                .doOnComplete(() -> {
+                .doOnCompleteWithError(() -> {
+                    txtProgress.setText("Download finished with error");
+                })
+                .doOnCompleteWithSuccess(() -> {
                     txtProgress.setText("Download finished successfully");
                 })
                 .asList()
                 .subscribe((entries, throwable) -> {
                     Log.e(TAG, "Files count:" + entries.size());
-                    entries.forEach(fileContainer -> {
+                    // Showing the list of files
+                    for (FileContainer fileContainer : entries) {
                         if (fileContainer.isSuccessed()) {
                             Log.e(TAG, "File: " + fileContainer.getFile().getName() + "status:" + fileContainer.isSuccessed());
                         }
-                    });
+                    }
+
                 });
     }
 
