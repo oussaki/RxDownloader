@@ -18,9 +18,53 @@ Example:
                 .build();
 
 // Subscribe to start downloading files 
-        rxDownloader.asList().subscribe((fileContainers, throwable) -> {
-           // Do awesome things with your files
-        });
+       rxDownloader.asList()
+                .subscribeOn(Schedulers.computation())
+                .subscribe(new BiConsumer<List<FileContainer>, Throwable>() {
+                    @Override
+                    public void accept(List<FileContainer> fileContainers, Throwable throwable) throws Exception {
+                        // Do awesome things with your files
+
+                    }
+                });
+```
+
+# Hanling Downloading Progress Events and Publish to UI 
+
+    There is 5 Events you can use in this library:
+     
+      * doOnStart : This event will be called before start downloading files
+      * doOnProgress : This event will publish the current progress each time a file downloaded
+      * doOnSingleError : Event called each time a file failed to download
+      * doOnCompleteWithError : Event called when finish all the downloads and some of the files failed to download
+      * doOnCompleteWithSuccess : Event called when finish downloading all the files successfully
+
+* Example:
+
+```java
+ RxDownloader rxDownloader = new RxDownloader
+                .Builder(context)
+                .addFile("http://reactivex.io/assets/Rx_Logo_S.png")
+                .build()
+                .doOnStart(() -> {
+                    progressBar.setProgress(0);
+                    multiline.setText("");
+                    txtProgress.setText("About to start downloading");
+                })
+                .doOnProgress(progress -> {
+                    progressBar.setProgress(progress);
+                    multiline.append("\n Progress " + progress);
+                    txtProgress.setText("Progress: " + progress + "%");
+                })
+                .doOnSingleError(throwable -> {
+                    multiline.append("\n " + throwable.getMessage());
+                })
+                .doOnCompleteWithError(() -> {
+                    txtProgress.setText("Download finished with error");
+                })
+                .doOnCompleteWithSuccess(() -> {
+                    txtProgress.setText("Download finished successfully");
+                });
 ```
 
 # Testing

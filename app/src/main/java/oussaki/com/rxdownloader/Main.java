@@ -27,6 +27,7 @@ import io.reactivex.ObservableEmitter;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.BiConsumer;
 import io.reactivex.functions.Cancellable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
@@ -64,13 +65,37 @@ public class Main extends AppCompatActivity {
         RxDownloader rxDownloader = new RxDownloader
                 .Builder(context)
                 .addFile("http://reactivex.io/assets/Rx_Logo_S.png")
-                .build();
-        // Subscribe to start downloading files
-        rxDownloader.asList().subscribeOn(Schedulers.computation())
+                .build()
+                .doOnStart(() -> {
+                    progressBar.setProgress(0);
+                    multiline.setText("");
+                    txtProgress.setText("About to start downloading");
+                })
+                .doOnProgress(progress -> {
+                    progressBar.setProgress(progress);
+                    multiline.append("\n Progress " + progress);
+                    txtProgress.setText("Progress: " + progress + "%");
+                })
+                .doOnSingleError(throwable -> {
+                    multiline.append("\n " + throwable.getMessage());
+                })
+                .doOnCompleteWithError(() -> {
+                    txtProgress.setText("Download finished with error");
+                })
+                .doOnCompleteWithSuccess(() -> {
+                    txtProgress.setText("Download finished successfully");
+                });
 
-                .subscribe((fileContainers, throwable) -> {
-           // Do awesome things with your files
-        });
+        // Subscribe to start downloading files
+        rxDownloader.asList()
+                .subscribeOn(Schedulers.computation())
+                .subscribe(new BiConsumer<List<FileContainer>, Throwable>() {
+                    @Override
+                    public void accept(List<FileContainer> fileContainers, Throwable throwable) throws Exception {
+                        // Do awesome things with your files
+
+                    }
+                });
     }
 
     private void Sample() {
