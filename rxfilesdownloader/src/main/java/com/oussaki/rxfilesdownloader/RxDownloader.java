@@ -24,30 +24,27 @@ import okhttp3.Request;
 
 public class RxDownloader {
     public static String TAG = "RxDownloader";
-    Context context;
-    int errors = 0;
-    int size;
-    int remains;
-    ReplaySubject<FileContainer> subject;
-
-    ItemsObserver itemsObserver;
-    RxStorage rxStorage;
-    OnStart onStart;
-    OnError onError;
-    OnCompleteWithSuccess onCompleteWithSuccess;
-    OnCompleteWithError onCompleteWithError;
-    OnProgress onProgress;
+    private Context context;
+    private int errors = 0;
+    private int size;
+    private int remains;
+    private ReplaySubject<FileContainer> subject;
+    private ItemsObserver itemsObserver;
+    private RxStorage rxStorage;
+    /* Actions */
+    private OnStart onStart;
+    private OnError onError;
+    private OnCompleteWithSuccess onCompleteWithSuccess;
+    private OnCompleteWithError onCompleteWithError;
+    private OnProgress onProgress;
     private OkHttpClient client;
     private int STRATEGY;
-    // Actions
     private File STORAGE;
     private List<FileContainer> files;
     private int downloaded = 0;
     private boolean canceled = false;
 
     RxDownloader(final Builder builder) {
-
-
         Log.i(TAG, "Constructor");
         this.context = builder.context;
         this.client = builder.client;
@@ -58,9 +55,6 @@ public class RxDownloader {
         this.subject = ReplaySubject.create();
         this.rxStorage = builder.rxStorage;
         this.itemsObserver = new ItemsObserver(rxStorage);
-//        subject.doOnError(throwable -> {
-//            Log.d(TAG, "Do on error subject");
-//        });
     }
 
     /*
@@ -73,7 +67,7 @@ public class RxDownloader {
     }
 
     /*
-    * initProgress : Before starting downloading
+    * doOnStart : Action to be taken before start downloading
     * */
     public RxDownloader doOnStart(OnStart action) {
         this.onStart = action;
@@ -82,7 +76,7 @@ public class RxDownloader {
     }
 
     /**
-     * doOnCompleteWithSuccess : When successfully finish downloading all the files
+     * doOnCompleteWithSuccess : Action to be taken when successfully finish downloading all the files
      */
     public RxDownloader doOnCompleteWithSuccess(OnCompleteWithSuccess action) {
         this.onCompleteWithSuccess = action;
@@ -91,7 +85,7 @@ public class RxDownloader {
     }
 
     /**
-     * doOnCompleteWithError : When downloading ends with an error
+     * doOnCompleteWithError : Action to be taken when downloading ends with an error
      */
     public RxDownloader doOnCompleteWithError(OnCompleteWithError action) {
         this.onCompleteWithError = action;
@@ -109,6 +103,12 @@ public class RxDownloader {
         return this;
     }
 
+    /**
+     * Check if Object is null ot not
+     *
+     * @param obj
+     * @return boolean
+     */
     boolean isNull(Object obj) {
         if (obj == null)
             Log.i(TAG, "Object is null");
@@ -117,6 +117,9 @@ public class RxDownloader {
         return obj == null;
     }
 
+    /*
+    * Print the current thread name.
+    * */
     private void current_thread() {
         Log.e(TAG, "Thread:" + Thread.currentThread().getName());
     }
@@ -165,11 +168,11 @@ public class RxDownloader {
                 this.itemsObserver.CompleteWithSuccess();
             else
                 this.itemsObserver.CompleteWithError();
-
             Log.i(TAG, remains + " i will throw on complete");
 //          subject.onCompleteWithSuccess(); // it was like this
         }
     }
+
 
     private void catchCanceling(byte[] bytes) {
         // cancel only if the strategy is ALL strategy
@@ -206,6 +209,7 @@ public class RxDownloader {
     private Observable<FileContainer> ObservableFileDownloader(final FileContainer fileContainer) {
         Observable<FileContainer> observable = Observable
                 .fromCallable(() -> downloadFile(fileContainer.getUrl()))
+
                 .onErrorReturn(throwable -> {
                     Log.e(TAG, "throwable");
                     byte[] b = new byte[1];
@@ -279,6 +283,9 @@ public class RxDownloader {
         this.remains = this.size;
         Observable<FileContainer> observable = Observable
                 .fromIterable(this.files)
+                .doOnSubscribe(disposable -> {
+                    Log.d(TAG, "asList onSubscribe");
+                })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io());
         return parallelDownloading(observable).toList();

@@ -22,8 +22,10 @@ import static org.junit.Assert.assertNotEquals;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(
-        sdk = Build.VERSION_CODES.LOLLIPOP,
-        manifest = "build/intermediates/manifests/aapt/debug/AndroidManifest.xml")
+        manifest = "build/intermediates/manifests/aapt/debug/AndroidManifest.xml",
+//        constants = BuildConfig.class,
+        sdk = Build.VERSION_CODES.LOLLIPOP
+)
 public class RxDownloaderTest {
     RxDownloader rxDownloader;
     RxDownloader.Builder builder;
