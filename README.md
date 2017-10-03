@@ -106,7 +106,7 @@ The lib is available on jCenter. Add the following to your `build.gradle`:
 
 ```groovy
 dependencies {
-    compile 'com.patloew.rxlocation:rxlocation:1.0.3'
+    compile ''
 }
 ```
 
