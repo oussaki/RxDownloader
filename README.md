@@ -25,8 +25,9 @@ Example:
 
 # Testing
   
-  You can find the tests inside the sample project in RxTest Class, Here is some examples (Using Robolectric) :
-	Testing downloading with Max Strategy:
+  You can find the tests inside the sample project in RxTest Class, Here is some examples (Using Robolectric).
+
+  Testing downloading with Max Strategy:
 
 ```java
 	rxDownloader = builder
@@ -40,7 +41,6 @@ Example:
                 .assertValue(l -> l.size() == 3);
 
 ```
-	
 	Second test, Testing with ALL Strategy:
 ```java
 	 rxDownloader = builder
@@ -54,6 +54,16 @@ Example:
         testObserver
                 .assertNoErrors()
                 .assertValueCount(1);
+```
+
+# Setup
+
+The lib is available on jCenter. Add the following to your `build.gradle`:
+
+```groovy
+dependencies {
+    compile 'com.patloew.rxlocation:rxlocation:1.0.3'
+}
 ```
 
 # License
