@@ -11,6 +11,7 @@ import com.oussaki.rxfilesdownloader.RxDownloader;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
@@ -40,7 +41,7 @@ import static org.junit.Assert.assertThat;
         packageName = "oussaki.com.rxdownloader"
 //        manifest = "build/intermediates/manifests/full/debug/AndroidManifest.xml"
 )
-public class UiTest {
+public class RxTest {
     RxDownloader rxDownloader;
     RxDownloader.Builder builder;
     Context context;
@@ -48,7 +49,9 @@ public class UiTest {
 
     Main main;
     ShadowActivity shadowActivity;
-    List<FileContainer> res;
+
+    @Rule
+    public final TrampolineSchedulerRule schedulerRule = new TrampolineSchedulerRule();
 
     @Before
     public void setup() throws Exception {
@@ -56,7 +59,7 @@ public class UiTest {
         main = Robolectric.setupActivity(Main.class);
 
         context = RuntimeEnvironment.application;
-        Log.i("Rx", "init rxdownloading");
+        Log.i(TAG, "init rxdownloading");
         String url = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg.ximg.m_12_m.smart.jpg";
         String url2 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg";
         String url3 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/x-trail/product_code/product_version/overview/14TDI_ROGb004x.jpg";
@@ -67,43 +70,32 @@ public class UiTest {
     }
 
     @Test
-    public void LoginClickPerformed() throws Exception {
-        shadowActivity = Shadows.shadowOf(main);
-        shadowActivity.findViewById(R.id.Async).performClick();
-
-//        assertEquals("Download finish successfully",
-//                ((TextView) shadowActivity.findViewById(R.id.progress)).getText().toString()
-//        );
-    }
-
-
-    @Test
-    public void isMaxStrategyworks() throws Exception {
+    public void isMaxStrategyWorks() throws Exception {
         rxDownloader = builder
                 .strategy(DownloadStrategy.MAX)
-                .addFile("http://fakeURL.com/error-file.jpg")
+                .addFile("http://fakeURL.com/error-file.jpg")  // this will trigger an error
                 .build();
-
-
         TestObserver<List<FileContainer>> testObserver = rxDownloader.asList().test();
         testObserver.awaitTerminalEvent();
         testObserver
                 .assertNoErrors()
                 .assertValue(l -> l.size() == 3);
     }
-//    @Test
-//    public void isAllStrategyworks() throws Exception {
-//        rxDownloader = builder
-//                .strategy(DownloadStrategy.ALL)
-//                .addFile("http://fakeURL.com/error-file2.jpg")
-//                .build();
-//
-//        rxDownloader.asList().subscribe((fileContainers, throwable) -> {
-//            res = fileContainers;
-//            Log.d(TAG,"Assert now");
-//            Assert.assertEquals(res.size(), 0);
-//        });
-//
-//    }
+
+    @Test
+    public void isAllStrategyWorks() throws Exception {
+        rxDownloader = builder
+                .strategy(DownloadStrategy.ALL)
+                .addFile("http://fakeURL.com/error-file2.jpg") // this will trigger an error
+                .addFile("http://reactivex.io/assets/Rx_Logo_S.png")
+                .build();
+
+        TestObserver<List<FileContainer>> testObserver = rxDownloader.asList().test();
+        testObserver.awaitTerminalEvent();
+        testObserver
+                .assertNoErrors()
+                .assertValueCount(1);
+
+    }
 
 }

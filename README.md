@@ -23,6 +23,38 @@ Example:
         });
 ```
 
+# Testing
+  
+  You can find the tests inside the sample project in RxTest Class, Here is some examples (Using Robolectric) :
+	Testing downloading with Max Strategy:
+
+```java
+	rxDownloader = builder
+                .strategy(DownloadStrategy.MAX)
+                .addFile("http://fakeURL.com/error-file.jpg")  // this will trigger an error
+                .build();
+        TestObserver<List<FileContainer>> testObserver = rxDownloader.asList().test();
+        testObserver.awaitTerminalEvent();
+        testObserver
+                .assertNoErrors()
+                .assertValue(l -> l.size() == 3);
+
+```
+	
+	Second test, Testing with ALL Strategy:
+```java
+	 rxDownloader = builder
+                .strategy(DownloadStrategy.ALL)
+                .addFile("http://fakeURL.com/error-file2.jpg") // this will trigger an error
+                .addFile("http://reactivex.io/assets/Rx_Logo_S.png")
+                .build();
+
+        TestObserver<List<FileContainer>> testObserver = rxDownloader.asList().test();
+        testObserver.awaitTerminalEvent();
+        testObserver
+                .assertNoErrors()
+                .assertValueCount(1);
+```
 
 # License
 

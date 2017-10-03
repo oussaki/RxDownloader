@@ -66,7 +66,9 @@ public class Main extends AppCompatActivity {
                 .addFile("http://reactivex.io/assets/Rx_Logo_S.png")
                 .build();
         // Subscribe to start downloading files
-        rxDownloader.asList().subscribe((fileContainers, throwable) -> {
+        rxDownloader.asList().subscribeOn(Schedulers.computation())
+
+                .subscribe((fileContainers, throwable) -> {
            // Do awesome things with your files
         });
     }

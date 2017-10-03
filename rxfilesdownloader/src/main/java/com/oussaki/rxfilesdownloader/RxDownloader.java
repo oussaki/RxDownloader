@@ -141,6 +141,7 @@ public class RxDownloader {
             /*
             * Canceled file want be considered as downloaded files ( Ignored )
             * */
+            Log.d(TAG, "emptyContainer.setCanceled");
             emptyContainer.setCanceled(true); // to help filtration in ALL Strategy
         } else if (emptyContainer.isSucceed() && !canceled) {
             final String filename = emptyContainer.getFilename();
@@ -176,6 +177,7 @@ public class RxDownloader {
 
     private void catchCanceling(byte[] bytes) {
         // cancel only if the strategy is ALL strategy
+        Log.d(TAG, "catchCanceling  " + (bytes.length == 1 && STRATEGY == DownloadStrategy.ALL));
         if (bytes.length == 1 && STRATEGY == DownloadStrategy.ALL)
             canceled = true;
     }
@@ -229,7 +231,12 @@ public class RxDownloader {
             observable = maxStrategy(observable, fileContainer);
 
         return observable.doOnNext(fileContainerOnNext -> publishContainer(fileContainerOnNext))
-                .filter(fileContainer1 -> fileContainer1.isSucceed() && !fileContainer1.isCanceled());
+                .filter(fileContainer1 -> fileContainer1.isSucceed() && !fileContainer1.isCanceled())
+                .filter(fileContainer1 -> {
+                    Log.d(TAG,"Filter 2"+fileContainer1.isCanceled());
+//                    if(canceled && )
+                    return true;
+                });
     }
 
     private Observable<FileContainer> maxStrategy(Observable<FileContainer> observable, FileContainer fileContainer) {
@@ -283,9 +290,6 @@ public class RxDownloader {
         this.remains = this.size;
         Observable<FileContainer> observable = Observable
                 .fromIterable(this.files)
-                .doOnSubscribe(disposable -> {
-                    Log.d(TAG, "asList onSubscribe");
-                })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io());
         return parallelDownloading(observable).toList();
