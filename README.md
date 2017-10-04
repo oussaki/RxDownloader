@@ -29,7 +29,7 @@ Example:
                 });
 ```
 
-# Hanling Downloading Progress Events and Publish to UI 
+# Hanling Progress & Error Events and Publish to results to UI 
 
     There is 5 Events you can use in this library:
      
@@ -65,6 +65,31 @@ Example:
                 .doOnCompleteWithSuccess(() -> {
                     txtProgress.setText("Download finished successfully");
                 });
+```
+
+# Options :
+- Customize OkHttpClient  
+```java
+	 OkHttpClient ok = new OkHttpClient.Builder().connectTimeout(6,TimeUnit.SECONDS).build();
+	 new RxDownloader
+                .Builder(context)
+                .client(ok)
+                .build();
+```
+- Download Strategy 
+    1 - MAX Strategy: will try to download all the files in case of errors it's will continue till the end
+```java
+ 	 new RxDownloader
+                .Builder(context)
+                .strategy(DownloadStrategy.MAX)
+                
+
+```
+    2 - ALL Strategy: will try to download all the files but if it encountered an error it's will stop immediately
+```java
+	new RxDownloader
+                .Builder(context)
+                .strategy(DownloadStrategy.ALL)
 ```
 
 # Testing

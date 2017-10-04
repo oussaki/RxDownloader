@@ -62,8 +62,10 @@ public class Main extends AppCompatActivity {
     }
 
     private void example() {
+        OkHttpClient ok = new OkHttpClient.Builder().connectTimeout(6,TimeUnit.SECONDS).build();
         RxDownloader rxDownloader = new RxDownloader
                 .Builder(context)
+                .strategy(DownloadStrategy.MAX)
                 .addFile("http://reactivex.io/assets/Rx_Logo_S.png")
                 .build()
                 .doOnStart(() -> {

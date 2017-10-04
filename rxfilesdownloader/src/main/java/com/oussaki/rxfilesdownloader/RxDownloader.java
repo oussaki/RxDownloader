@@ -332,7 +332,7 @@ public class RxDownloader {
          * @param client and OkHttp instance
          * @return Builder
          */
-        Builder client(@NonNull OkHttpClient client) {
+        public Builder client(@NonNull OkHttpClient client) {
             if (client != null)
                 this.client = client;
             return this;
