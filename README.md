@@ -29,7 +29,7 @@ Example:
                 });
 ```
 
-# Hanling Progress & Error Events and Publish to results to UI 
+# Hanling Progress & Error Events
 
 There is 5 Events you can use in this library:
   

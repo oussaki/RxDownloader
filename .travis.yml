@@ -12,10 +12,21 @@ jdk: oraclejdk8
 notifications:
   email: false
 
+env:
+    matrix:
+        - ANDROID_TARGET=android-19 ANDROID_ABI=armeabi-v7a
+        - ANDROID_TARGET=android-21 ANDROID_ABI=armeabi-v7a
+    global:
+        - ADB_INSTALL_TIMEOUT=10    #Time out to 10 mins
+
 sudo: false
 
 cache:
-  directories:
+  directories:      #Cache all dirs under .gradle folder
     - $HOME/.gradle
+    - $HOME/.gradle/daemon      #Cache daemon logs
+    - $HOME/.gradle/native      #Cache library downloaded from the gradle dependency
+    - $HOME/.gradle/wrapper     #Cache the gradle
 
 script: ./gradlew test
+

@@ -71,6 +71,7 @@ public class RxTest {
 
     @Test
     public void isMaxStrategyWorks() throws Exception {
+
         rxDownloader = builder
                 .strategy(DownloadStrategy.MAX)
                 .addFile("http://fakeURL.com/error-file.jpg")  // this will trigger an error
@@ -84,6 +85,7 @@ public class RxTest {
 
     @Test
     public void isAllStrategyWorks() throws Exception {
+
         rxDownloader = builder
                 .strategy(DownloadStrategy.ALL)
                 .addFile("http://fakeURL.com/error-file2.jpg") // this will trigger an error
