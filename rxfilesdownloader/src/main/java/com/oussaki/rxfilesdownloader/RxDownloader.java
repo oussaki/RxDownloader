@@ -315,7 +315,7 @@ public class RxDownloader {
     }
 
     /**
-     * Downloading the files Asynchronously
+     * Downloading the files in Parallel using FlatMap
      *
      * @param observable
      * @return
@@ -429,7 +429,7 @@ public class RxDownloader {
         }
 
         /**
-         * ُExtract the Name and extension of given file URL
+         * ُExtract the Name and extension of a given file URL
          *
          * @param url
          * @return Builder
@@ -440,7 +440,7 @@ public class RxDownloader {
 
 
         /**
-         * Set the storage type to save files in
+         * Add file to downloading list
          *
          * @param url
          * @return Builder
@@ -462,15 +462,11 @@ public class RxDownloader {
         public Builder storage(@NonNull File storagePath) {
             if (storagePath != null)
                 this.STORAGE = storagePath;
-//            if (STORAGE == RxStorage.DATA_DIRECTORY)
-//                this.STORAGE = context.getCacheDir();
-//            else if (STORAGE == RxStorage.EXTERNAL_CACHE_DIR)
-//                this.STORAGE = context.getExternalCacheDir();
             return this;
         }
 
         /**
-         * Add Bulk of files to the HashMap
+         * Add Bulk of files to the List of files
          *
          * @param files
          * @return Builder
