@@ -19,7 +19,6 @@ Example:
 
 // Subscribe to start downloading files 
        rxDownloader.asList()
-                .subscribeOn(Schedulers.computation())
                 .subscribe(new BiConsumer<List<FileContainer>, Throwable>() {
                     @Override
                     public void accept(List<FileContainer> fileContainers, Throwable throwable) throws Exception {
