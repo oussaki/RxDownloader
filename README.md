@@ -137,11 +137,22 @@ You can find the tests inside the sample project in RxTest Class, Here is some e
 
 # Setup
 
-The lib is available on jCenter. Add the following to your `build.gradle`:
+Add it in your root build.gradle at the end of repositories:
+
+```groovy 
+allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+```
+
+Add the dependency to your `build.gradle`:
 
 ```groovy
 dependencies {
-    compile ''
+    compile 'com.github.oussaki:RxDownloader:0.2'
 }
 ```
 
