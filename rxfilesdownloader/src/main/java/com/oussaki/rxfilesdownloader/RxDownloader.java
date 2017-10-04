@@ -51,24 +51,32 @@ public class RxDownloader {
         this.STRATEGY = builder.STRATEGY;
         this.files = new ArrayList<>(builder.files.size());
         this.files.addAll(builder.files);
+
         this.STORAGE = builder.STORAGE;
+
         this.subject = ReplaySubject.create();
         this.rxStorage = builder.rxStorage;
         this.itemsObserver = new ItemsObserver(rxStorage);
     }
 
-    /*
-    * Action to be taken when error thrown for one single file
-    * */
+    /**
+     * Action to be taken when error thrown for one single file
+     *
+     * @param action
+     * @return RxDownloader
+     */
     public RxDownloader doOnSingleError(OnError action) {
         this.onError = action;
         this.itemsObserver.onError(action);
         return this;
     }
 
-    /*
-    * doOnStart : Action to be taken before start downloading
-    * */
+    /**
+     * doOnStart : Action to be taken before start downloading
+     *
+     * @param action
+     * @return RxDownloader
+     */
     public RxDownloader doOnStart(OnStart action) {
         this.onStart = action;
         this.itemsObserver.onStart(action);
@@ -77,6 +85,9 @@ public class RxDownloader {
 
     /**
      * doOnCompleteWithSuccess : Action to be taken when successfully finish downloading all the files
+     *
+     * @param action
+     * @return RxDownloader
      */
     public RxDownloader doOnCompleteWithSuccess(OnCompleteWithSuccess action) {
         this.onCompleteWithSuccess = action;
@@ -86,6 +97,9 @@ public class RxDownloader {
 
     /**
      * doOnCompleteWithError : Action to be taken when downloading ends with an error
+     *
+     * @param action
+     * @return RxDownloader
      */
     public RxDownloader doOnCompleteWithError(OnCompleteWithError action) {
         this.onCompleteWithError = action;
@@ -96,6 +110,9 @@ public class RxDownloader {
 
     /**
      * doOnProgress(int progress) : On downloading files
+     *
+     * @param action
+     * @return RxDownloader
      */
     public RxDownloader doOnProgress(OnProgress action) {
         this.onProgress = action;
@@ -134,6 +151,11 @@ public class RxDownloader {
         return client.newCall(new Request.Builder().url(url).build()).execute().body().bytes();
     }
 
+    /**
+     * @param bytes
+     * @param emptyContainer
+     * @return FileContainer
+     */
     FileContainer produceFileContainerFromBytes(final byte[] bytes, final FileContainer emptyContainer) {
         current_thread();
         Log.d(TAG, "fileContainer success" + emptyContainer.isSucceed());
@@ -145,7 +167,9 @@ public class RxDownloader {
             emptyContainer.setCanceled(true); // to help filtration in ALL Strategy
         } else if (emptyContainer.isSucceed() && !canceled) {
             final String filename = emptyContainer.getFilename();
-            final File file = new File(context.getCacheDir() + File.separator + filename);
+
+
+            final File file = new File(  STORAGE   + File.separator + filename);
             int progress = 0;
             if (size > 0)
                 progress = Math.abs(((remains * 100) / size) - 100);
@@ -158,6 +182,9 @@ public class RxDownloader {
         return emptyContainer;
     }
 
+    /**
+     * @param fileContainer
+     */
     private void publishContainer(FileContainer fileContainer) {
         current_thread();
         if (fileContainer.isSucceed())
@@ -174,7 +201,9 @@ public class RxDownloader {
         }
     }
 
-
+    /**
+     * @param bytes
+     */
     private void catchCanceling(byte[] bytes) {
         // cancel only if the strategy is ALL strategy
         Log.d(TAG, "catchCanceling  " + (bytes.length == 1 && STRATEGY == DownloadStrategy.ALL));
@@ -182,6 +211,10 @@ public class RxDownloader {
             canceled = true;
     }
 
+    /**
+     * @param bytes
+     * @param fileContainer
+     */
     private void catchDownloadError(byte[] bytes, FileContainer fileContainer) {
         if (bytes.length == 1) {
             errors++;
@@ -195,7 +228,10 @@ public class RxDownloader {
         remains--;
     }
 
-
+    /**
+     * @param fileContainer
+     * @throws IOException
+     */
     private void handleDownloadError(FileContainer fileContainer) throws IOException {
         if (!fileContainer.isSucceed())
             throw new IOException("Can not download the file " + fileContainer.getFilename());
@@ -233,12 +269,17 @@ public class RxDownloader {
         return observable.doOnNext(fileContainerOnNext -> publishContainer(fileContainerOnNext))
                 .filter(fileContainer1 -> fileContainer1.isSucceed() && !fileContainer1.isCanceled())
                 .filter(fileContainer1 -> {
-                    Log.d(TAG,"Filter 2"+fileContainer1.isCanceled());
+                    Log.d(TAG, "Filter 2" + fileContainer1.isCanceled());
 //                    if(canceled && )
                     return true;
                 });
     }
 
+    /**
+     * @param observable
+     * @param fileContainer
+     * @return
+     */
     private Observable<FileContainer> maxStrategy(Observable<FileContainer> observable, FileContainer fileContainer) {
         Log.d(TAG, "Going to use max strategy");
         return observable
@@ -252,6 +293,10 @@ public class RxDownloader {
                 });
     }
 
+    /**
+     * @param observable
+     * @return
+     */
     private Observable<FileContainer> allStrategy(Observable<FileContainer> observable) {
         Log.d(TAG, "Going to use all strategy");
         return observable
@@ -296,9 +341,9 @@ public class RxDownloader {
     }
 
 
-    /*
-    * Builder Class
-    * */
+    /**
+     * Builder Class
+     */
     public static final class Builder {
         Context context;
         OkHttpClient client;
@@ -402,14 +447,15 @@ public class RxDownloader {
         /**
          * Set the storage type to save files in
          *
-         * @param STORAGE
+         * @param storagePath
          * @return Builder
          */
-        public Builder storage(int STORAGE) {
-            if (STORAGE == RxStorage.DATA_DIRECTORY)
-                this.STORAGE = context.getCacheDir();
-            else if (STORAGE == RxStorage.EXTERNAL_CACHE_DIR)
-                this.STORAGE = context.getExternalCacheDir();
+        public Builder storage(File storagePath) {
+            this.STORAGE = storagePath;
+//            if (STORAGE == RxStorage.DATA_DIRECTORY)
+//                this.STORAGE = context.getCacheDir();
+//            else if (STORAGE == RxStorage.EXTERNAL_CACHE_DIR)
+//                this.STORAGE = context.getExternalCacheDir();
             return this;
         }
 

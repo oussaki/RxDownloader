@@ -1,6 +1,7 @@
 package com.oussaki.rxfilesdownloader;
 
 import android.content.Context;
+import android.os.Environment;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -14,8 +15,8 @@ import java.io.OutputStream;
  */
 
 public class RxStorage {
-    static int DATA_DIRECTORY = 0; //
-    static int EXTERNAL_CACHE_DIR = 1;
+    static int DATA_DIRECTORY = 0; // unused for now maybe in next API version
+    static int EXTERNAL_CACHE_DIR = 1; // unused for now maybe in next API version
     Context context;
 
     RxStorage(Context context) {
@@ -43,7 +44,6 @@ public class RxStorage {
         output.close();
         input.close();
     }
-
 
     void saveToFile(byte[] is, File file) throws IOException {
         FileOutputStream outputStream;

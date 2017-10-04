@@ -76,6 +76,10 @@ There is 5 Events you can use in this library:
                 .client(ok)
                 .build();
 ```
+* Customize Directory to save your files
+By default files will be saved in cache directory.
+You can just customize the directory by calling : `storage(File storagePath)`
+
 * Download Strategy
   
 1- MAX Strategy: will try to download all the files in case of errors it's will continue till the end.
