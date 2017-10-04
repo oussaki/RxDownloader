@@ -56,7 +56,7 @@ There is 5 Events you can use in this library:
                     multiline.append("\n Progress " + progress);
                     txtProgress.setText("Progress: " + progress + "%");
                 })
-                .doOnSingleError(throwable -> {
+                .doOnEachSingleError(throwable -> {
                     multiline.append("\n " + throwable.getMessage());
                 })
                 .doOnCompleteWithError(() -> {
