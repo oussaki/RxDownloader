@@ -66,7 +66,7 @@ public class RxDownloader {
     /*
     * Action to be taken when error thrown for one single file
     * */
-    public RxDownloader doOnSingleError(OnError action) {
+    public RxDownloader doOnEachSingleError(OnError action) {
         this.onError = action;
         this.itemsObserver.onError(action);
         return this;

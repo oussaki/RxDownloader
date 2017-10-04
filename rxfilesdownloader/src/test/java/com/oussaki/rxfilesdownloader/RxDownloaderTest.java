@@ -22,21 +22,23 @@ import static org.junit.Assert.assertNotEquals;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(
-        sdk = Build.VERSION_CODES.LOLLIPOP,
-        manifest = "build/intermediates/manifests/aapt/debug/AndroidManifest.xml")
+        //        manifest = "build/intermediates/manifests/aapt/debug/AndroidManifest.xml",
+        manifest = Config.NONE,
+        sdk = Build.VERSION_CODES.LOLLIPOP
+)
 public class RxDownloaderTest {
     RxDownloader rxDownloader;
     RxDownloader.Builder builder;
     Context context;
-    String TAG = "Tests";
+    String TAG = "RxTests";
+    String url = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg.ximg.m_12_m.smart.jpg";
+    String url2 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg";
+    String url3 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/x-trail/product_code/product_version/overview/14TDI_ROGb004x.jpg";
 
     @Before
     public void setUp() throws Exception {
         context = RuntimeEnvironment.application;
-        Log.i("Rx", "init rxdownloading");
-        String url = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg.ximg.m_12_m.smart.jpg";
-        String url2 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg";
-        String url3 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/x-trail/product_code/product_version/overview/14TDI_ROGb004x.jpg";
+        Log.i(TAG, "setUp");
         builder = new RxDownloader.Builder(context)
                 .addFile("file1", url)
                 .addFile(url3)
@@ -45,6 +47,8 @@ public class RxDownloaderTest {
 
     @Test
     public void isMaxStrategyworks() throws Exception {
+        Log.i(TAG, "Testing isMaxStrategyworks");
+
         rxDownloader = builder
                 .strategy(DownloadStrategy.MAX)
                 .addFile("http://fakeURL.com/error-file.jpg")
@@ -60,6 +64,8 @@ public class RxDownloaderTest {
 
     @Test
     public void isAllStrategyworks() throws Exception {
+        Log.i(TAG, "Testing isAllStrategyworks");
+
         rxDownloader = builder
                 .strategy(DownloadStrategy.ALL)
                 .addFile("http://fakeURL.com/error-file2.jpg")
