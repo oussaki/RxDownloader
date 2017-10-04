@@ -31,13 +31,13 @@ Example:
 
 # Hanling Progress & Error Events and Publish to results to UI 
 
-    There is 5 Events you can use in this library:
-     
-      * doOnStart : This event will be called before start downloading files
-      * doOnProgress : This event will publish the current progress each time a file downloaded
-      * doOnSingleError : Event called each time a file failed to download
-      * doOnCompleteWithError : Event called when finish all the downloads and some of the files failed to download
-      * doOnCompleteWithSuccess : Event called when finish downloading all the files successfully
+There is 5 Events you can use in this library:
+  
+      * `doOnStart` : This event will be called before start downloading files
+      * `doOnProgress` : This event will publish the current progress each time a file downloaded
+      * `doOnSingleError` : Event called each time a file failed to download
+      * `doOnCompleteWithError` : Event called when finish all the downloads and some of the files failed to download
+      * `doOnCompleteWithSuccess` : Event called when finish downloading all the files successfully
 
 * Example:
 
@@ -68,7 +68,7 @@ Example:
 ```
 
 # Options :
-- Customize OkHttpClient  
+* Customize OkHttpClient  
 ```java
 	 OkHttpClient ok = new OkHttpClient.Builder().connectTimeout(6,TimeUnit.SECONDS).build();
 	 new RxDownloader
@@ -76,8 +76,10 @@ Example:
                 .client(ok)
                 .build();
 ```
-- Download Strategy 
-    1 - MAX Strategy: will try to download all the files in case of errors it's will continue till the end
+* Download Strategy
+  
+1- MAX Strategy: will try to download all the files in case of errors it's will continue till the end.
+
 ```java
  	 new RxDownloader
                 .Builder(context)
@@ -85,7 +87,9 @@ Example:
                 
 
 ```
-    2 - ALL Strategy: will try to download all the files but if it encountered an error it's will stop immediately
+
+2- ALL Strategy: will try to download all the files but if it encountered an error it's will stop immediately.
+
 ```java
 	new RxDownloader
                 .Builder(context)
@@ -94,9 +98,9 @@ Example:
 
 # Testing
   
-  You can find the tests inside the sample project in RxTest Class, Here is some examples (Using Robolectric).
+You can find the tests inside the sample project in RxTest Class, Here is some examples (Using Robolectric).
 
-  Testing downloading with Max Strategy:
+* Testing downloading with Max Strategy:
 
 ```java
 	rxDownloader = builder
@@ -110,7 +114,9 @@ Example:
                 .assertValue(l -> l.size() == 3);
 
 ```
-	Second test, Testing with ALL Strategy:
+	
+* Second test, Testing with ALL Strategy:
+
 ```java
 	 rxDownloader = builder
                 .strategy(DownloadStrategy.ALL)
