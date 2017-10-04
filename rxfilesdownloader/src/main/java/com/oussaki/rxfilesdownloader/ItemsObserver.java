@@ -58,7 +58,7 @@ public class ItemsObserver implements Observer<FileContainer> {
         if (onStart != null)
             onStart.run();
 
-        Log.d(TAG, " First onSubscribe : " + d.isDisposed());
+        Log.d(TAG, "ItemsObserver onSubscribe");
     }
 
     @Override

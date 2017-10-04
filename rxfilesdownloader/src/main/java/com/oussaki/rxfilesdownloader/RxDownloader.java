@@ -24,57 +24,59 @@ import okhttp3.Request;
 
 public class RxDownloader {
     public static String TAG = "RxDownloader";
-    Context context;
-    int errors = 0;
-    int size;
-    int remains;
-    ReplaySubject<FileContainer> subject;
-
-    ItemsObserver itemsObserver;
-    RxStorage rxStorage;
-    OnStart onStart;
-    OnError onError;
-    OnCompleteWithSuccess onCompleteWithSuccess;
-    OnCompleteWithError onCompleteWithError;
-    OnProgress onProgress;
+    private Context context;
+    private int errors = 0;
+    private int size;
+    private int remains;
+    private ReplaySubject<FileContainer> subject;
+    private ItemsObserver itemsObserver;
+    private RxStorage rxStorage;
+    /* Actions */
+    private OnStart onStart;
+    private OnError onError;
+    private OnCompleteWithSuccess onCompleteWithSuccess;
+    private OnCompleteWithError onCompleteWithError;
+    private OnProgress onProgress;
     private OkHttpClient client;
     private int STRATEGY;
-    // Actions
     private File STORAGE;
     private List<FileContainer> files;
     private int downloaded = 0;
     private boolean canceled = false;
 
     RxDownloader(final Builder builder) {
-
-
         Log.i(TAG, "Constructor");
         this.context = builder.context;
         this.client = builder.client;
         this.STRATEGY = builder.STRATEGY;
         this.files = new ArrayList<>(builder.files.size());
         this.files.addAll(builder.files);
+
         this.STORAGE = builder.STORAGE;
+
         this.subject = ReplaySubject.create();
         this.rxStorage = builder.rxStorage;
         this.itemsObserver = new ItemsObserver(rxStorage);
-//        subject.doOnError(throwable -> {
-//            Log.d(TAG, "Do on error subject");
-//        });
     }
 
-    /*
-    * Action to be taken when error thrown for one single file
-    * */
-    public RxDownloader doOnEachSingleError(OnError action) {
+    /**
+     * Action to be taken when error thrown for one single file
+     *
+     * @param action
+     * @return RxDownloader
+     */
+    public RxDownloader doOnSingleError(OnError action) {
         this.onError = action;
         this.itemsObserver.onError(action);
         return this;
     }
 
-    /*
-    * initProgress : Before starting downloading
-    * */
+    /**
+     * doOnStart : Action to be taken before start downloading
+     *
+     * @param action
+     * @return RxDownloader
+     */
     public RxDownloader doOnStart(OnStart action) {
         this.onStart = action;
         this.itemsObserver.onStart(action);
@@ -82,7 +84,10 @@ public class RxDownloader {
     }
 
     /**
-     * doOnCompleteWithSuccess : When successfully finish downloading all the files
+     * doOnCompleteWithSuccess : Action to be taken when successfully finish downloading all the files
+     *
+     * @param action
+     * @return RxDownloader
      */
     public RxDownloader doOnCompleteWithSuccess(OnCompleteWithSuccess action) {
         this.onCompleteWithSuccess = action;
@@ -91,7 +96,10 @@ public class RxDownloader {
     }
 
     /**
-     * doOnCompleteWithError : When downloading ends with an error
+     * doOnCompleteWithError : Action to be taken when downloading ends with an error
+     *
+     * @param action
+     * @return RxDownloader
      */
     public RxDownloader doOnCompleteWithError(OnCompleteWithError action) {
         this.onCompleteWithError = action;
@@ -102,6 +110,9 @@ public class RxDownloader {
 
     /**
      * doOnProgress(int progress) : On downloading files
+     *
+     * @param action
+     * @return RxDownloader
      */
     public RxDownloader doOnProgress(OnProgress action) {
         this.onProgress = action;
@@ -109,6 +120,12 @@ public class RxDownloader {
         return this;
     }
 
+    /**
+     * Check if Object is null ot not
+     *
+     * @param obj
+     * @return boolean
+     */
     boolean isNull(Object obj) {
         if (obj == null)
             Log.i(TAG, "Object is null");
@@ -117,6 +134,9 @@ public class RxDownloader {
         return obj == null;
     }
 
+    /*
+    * Print the current thread name.
+    * */
     private void current_thread() {
         Log.e(TAG, "Thread:" + Thread.currentThread().getName());
     }
@@ -131,6 +151,11 @@ public class RxDownloader {
         return client.newCall(new Request.Builder().url(url).build()).execute().body().bytes();
     }
 
+    /**
+     * @param bytes
+     * @param emptyContainer
+     * @return FileContainer
+     */
     FileContainer produceFileContainerFromBytes(final byte[] bytes, final FileContainer emptyContainer) {
         current_thread();
         Log.d(TAG, "fileContainer success" + emptyContainer.isSucceed());
@@ -138,10 +163,13 @@ public class RxDownloader {
             /*
             * Canceled file want be considered as downloaded files ( Ignored )
             * */
+            Log.d(TAG, "emptyContainer.setCanceled");
             emptyContainer.setCanceled(true); // to help filtration in ALL Strategy
         } else if (emptyContainer.isSucceed() && !canceled) {
             final String filename = emptyContainer.getFilename();
-            final File file = new File(context.getCacheDir() + File.separator + filename);
+
+
+            final File file = new File(  STORAGE   + File.separator + filename);
             int progress = 0;
             if (size > 0)
                 progress = Math.abs(((remains * 100) / size) - 100);
@@ -154,6 +182,9 @@ public class RxDownloader {
         return emptyContainer;
     }
 
+    /**
+     * @param fileContainer
+     */
     private void publishContainer(FileContainer fileContainer) {
         current_thread();
         if (fileContainer.isSucceed())
@@ -165,18 +196,25 @@ public class RxDownloader {
                 this.itemsObserver.CompleteWithSuccess();
             else
                 this.itemsObserver.CompleteWithError();
-
             Log.i(TAG, remains + " i will throw on complete");
 //          subject.onCompleteWithSuccess(); // it was like this
         }
     }
 
+    /**
+     * @param bytes
+     */
     private void catchCanceling(byte[] bytes) {
         // cancel only if the strategy is ALL strategy
+        Log.d(TAG, "catchCanceling  " + (bytes.length == 1 && STRATEGY == DownloadStrategy.ALL));
         if (bytes.length == 1 && STRATEGY == DownloadStrategy.ALL)
             canceled = true;
     }
 
+    /**
+     * @param bytes
+     * @param fileContainer
+     */
     private void catchDownloadError(byte[] bytes, FileContainer fileContainer) {
         if (bytes.length == 1) {
             errors++;
@@ -190,7 +228,10 @@ public class RxDownloader {
         remains--;
     }
 
-
+    /**
+     * @param fileContainer
+     * @throws IOException
+     */
     private void handleDownloadError(FileContainer fileContainer) throws IOException {
         if (!fileContainer.isSucceed())
             throw new IOException("Can not download the file " + fileContainer.getFilename());
@@ -206,6 +247,7 @@ public class RxDownloader {
     private Observable<FileContainer> ObservableFileDownloader(final FileContainer fileContainer) {
         Observable<FileContainer> observable = Observable
                 .fromCallable(() -> downloadFile(fileContainer.getUrl()))
+
                 .onErrorReturn(throwable -> {
                     Log.e(TAG, "throwable");
                     byte[] b = new byte[1];
@@ -225,9 +267,19 @@ public class RxDownloader {
             observable = maxStrategy(observable, fileContainer);
 
         return observable.doOnNext(fileContainerOnNext -> publishContainer(fileContainerOnNext))
-                .filter(fileContainer1 -> fileContainer1.isSucceed() && !fileContainer1.isCanceled());
+                .filter(fileContainer1 -> fileContainer1.isSucceed() && !fileContainer1.isCanceled())
+                .filter(fileContainer1 -> {
+                    Log.d(TAG, "Filter 2" + fileContainer1.isCanceled());
+//                    if(canceled && )
+                    return true;
+                });
     }
 
+    /**
+     * @param observable
+     * @param fileContainer
+     * @return
+     */
     private Observable<FileContainer> maxStrategy(Observable<FileContainer> observable, FileContainer fileContainer) {
         Log.d(TAG, "Going to use max strategy");
         return observable
@@ -241,6 +293,10 @@ public class RxDownloader {
                 });
     }
 
+    /**
+     * @param observable
+     * @return
+     */
     private Observable<FileContainer> allStrategy(Observable<FileContainer> observable) {
         Log.d(TAG, "Going to use all strategy");
         return observable
@@ -285,9 +341,9 @@ public class RxDownloader {
     }
 
 
-    /*
-    * Builder Class
-    * */
+    /**
+     * Builder Class
+     */
     public static final class Builder {
         Context context;
         OkHttpClient client;
@@ -321,7 +377,7 @@ public class RxDownloader {
          * @param client and OkHttp instance
          * @return Builder
          */
-        Builder client(@NonNull OkHttpClient client) {
+        public Builder client(@NonNull OkHttpClient client) {
             if (client != null)
                 this.client = client;
             return this;
@@ -391,14 +447,15 @@ public class RxDownloader {
         /**
          * Set the storage type to save files in
          *
-         * @param STORAGE
+         * @param storagePath
          * @return Builder
          */
-        public Builder storage(int STORAGE) {
-            if (STORAGE == RxStorage.DATA_DIRECTORY)
-                this.STORAGE = context.getCacheDir();
-            else if (STORAGE == RxStorage.EXTERNAL_CACHE_DIR)
-                this.STORAGE = context.getExternalCacheDir();
+        public Builder storage(File storagePath) {
+            this.STORAGE = storagePath;
+//            if (STORAGE == RxStorage.DATA_DIRECTORY)
+//                this.STORAGE = context.getCacheDir();
+//            else if (STORAGE == RxStorage.EXTERNAL_CACHE_DIR)
+//                this.STORAGE = context.getExternalCacheDir();
             return this;
         }
 
