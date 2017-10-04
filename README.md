@@ -33,11 +33,11 @@ Example:
 
 There is 5 Events you can use in this library:
   
-      * `doOnStart` : This event will be called before start downloading files
-      * `doOnProgress` : This event will publish the current progress each time a file downloaded
-      * `doOnSingleError` : Event called each time a file failed to download
-      * `doOnCompleteWithError` : Event called when finish all the downloads and some of the files failed to download
-      * `doOnCompleteWithSuccess` : Event called when finish downloading all the files successfully
+      * `doOnStart` : This event will be called before start downloading files.
+      * `doOnProgress` : This event will publish the current progress each time a file downloaded.
+      * `doOnEachSingleError` : Event called each time a file failed to download.
+      * `doOnCompleteWithError` : Event called when finish all the downloads and some of the files failed to download.
+      * `doOnCompleteWithSuccess` : Event called when finish downloading all the files successfully.
 
 * Example:
 

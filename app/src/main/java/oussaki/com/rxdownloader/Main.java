@@ -78,7 +78,7 @@ public class Main extends AppCompatActivity {
                     multiline.append("\n Progress " + progress);
                     txtProgress.setText("Progress: " + progress + "%");
                 })
-                .doOnSingleError(throwable -> {
+                .doOnEachSingleError(throwable -> {
                     multiline.append("\n " + throwable.getMessage());
                 })
                 .doOnCompleteWithError(() -> {

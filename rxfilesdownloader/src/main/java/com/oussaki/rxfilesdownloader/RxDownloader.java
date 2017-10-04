@@ -3,6 +3,7 @@ package com.oussaki.rxfilesdownloader;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.util.Patterns;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,7 +66,7 @@ public class RxDownloader {
      * @param action
      * @return RxDownloader
      */
-    public RxDownloader doOnSingleError(OnError action) {
+    public RxDownloader doOnEachSingleError(OnError action) {
         this.onError = action;
         this.itemsObserver.onError(action);
         return this;
@@ -169,7 +170,7 @@ public class RxDownloader {
             final String filename = emptyContainer.getFilename();
 
 
-            final File file = new File(  STORAGE   + File.separator + filename);
+            final File file = new File(STORAGE + File.separator + filename);
             int progress = 0;
             if (size > 0)
                 progress = Math.abs(((remains * 100) / size) - 100);
@@ -404,11 +405,17 @@ public class RxDownloader {
          * @return Builder
          */
         public Builder addFile(String newName, String url) {
-            String extesion = "";
-            if (newName.indexOf(".") < 0)
-                extesion = ExtractExtension(url);
-            files.add(new FileContainer(url, newName + extesion));
+            if (isUrl(url)) {
+                String extesion = "";
+                if (newName.indexOf(".") < 0)
+                    extesion = ExtractExtension(url);
+                files.add(new FileContainer(url, newName + extesion));
+            }
             return this;
+        }
+
+        private boolean isUrl(String url) {
+            return Patterns.WEB_URL.matcher(url.toLowerCase()).matches();
         }
 
         /**
@@ -438,9 +445,11 @@ public class RxDownloader {
          * @param url
          * @return Builder
          */
-        public Builder addFile(String url) {
-            String name = ExtractNameAndExtension(url);
-            files.add(new FileContainer(url, name));
+        public Builder addFile(@NonNull String url) {
+            if (isUrl(url)) {
+                String name = ExtractNameAndExtension(url);
+                files.add(new FileContainer(url, name));
+            }
             return this;
         }
 
@@ -450,8 +459,9 @@ public class RxDownloader {
          * @param storagePath
          * @return Builder
          */
-        public Builder storage(File storagePath) {
-            this.STORAGE = storagePath;
+        public Builder storage(@NonNull File storagePath) {
+            if (storagePath != null)
+                this.STORAGE = storagePath;
 //            if (STORAGE == RxStorage.DATA_DIRECTORY)
 //                this.STORAGE = context.getCacheDir();
 //            else if (STORAGE == RxStorage.EXTERNAL_CACHE_DIR)
