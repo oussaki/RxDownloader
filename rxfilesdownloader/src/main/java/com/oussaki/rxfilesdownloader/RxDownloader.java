@@ -52,9 +52,7 @@ public class RxDownloader {
         this.STRATEGY = builder.STRATEGY;
         this.files = new ArrayList<>(builder.files.size());
         this.files.addAll(builder.files);
-
         this.STORAGE = builder.STORAGE;
-
         this.subject = ReplaySubject.create();
         this.rxStorage = builder.rxStorage;
         this.itemsObserver = new ItemsObserver(rxStorage);
@@ -468,11 +466,14 @@ public class RxDownloader {
         /**
          * Add Bulk of files to the List of files
          *
-         * @param files
+         * @param urls
          * @return Builder
          */
-        public Builder addFiles(List<FileContainer> files) {
-            this.files.addAll(files);
+        public Builder addFiles(List<String> urls) {
+            for (String url : urls) {
+                FileContainer newFileContainer = new FileContainer(url, ExtractNameAndExtension(url));
+                this.files.add(newFileContainer);
+            }
             return this;
         }
 

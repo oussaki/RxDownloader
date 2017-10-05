@@ -41,9 +41,9 @@ import okhttp3.Response;
 public class Main extends AppCompatActivity {
     String TAG = "RxDownloader";
 
-    String url = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg.ximg.m_12_m.smart.jpg";
-    String url2 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg";
-    String url3 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/x-trail/product_code/product_version/overview/14TDI_ROGb004x.jpg";
+    String url = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Flag_of_Algeria.svg/1200px-Flag_of_Algeria.svg.png";
+    String url2 = "https://cdn-images-1.medium.com/max/2000/1*NkhhBPaaZXD9NSYC_xQ0LA.png";
+    String url3 = "https://developer.android.com/_static/images/android/touchicon-180.png";
     String aVideo = "http://techslides.com/demos/sample-videos/small.mp4";
     EditText multiline;
     ProgressBar progressBar;
@@ -108,10 +108,10 @@ public class Main extends AppCompatActivity {
                 .addFile("vxidaseo", aVideo)
                 .addFile("file2", url2)
                 .addFile("videoxssda", aVideo)
-                .addFile("vxidaseo", "http://goolpanitchugos.com/j.jpg")
+                .addFile("vxidaseo", "http://fake-url.com/not-found-image.jpg")
                 .addFile("file2", url2)
                 .addFile("videoxssda", aVideo)
-                .addFile("vidaseo", "http://goolpanitchugo.com/j.jpg")
+                .addFile("vidaseo", "http://fake-url.com/not-found-image.jpg")
                 .addFile("vxidaseo", aVideo)
                 .addFile("file2", url2)
                 .addFile(url3)
