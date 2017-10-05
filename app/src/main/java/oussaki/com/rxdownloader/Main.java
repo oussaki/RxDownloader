@@ -12,31 +12,14 @@ import com.oussaki.rxfilesdownloader.DownloadStrategy;
 import com.oussaki.rxfilesdownloader.FileContainer;
 import com.oussaki.rxfilesdownloader.RxDownloader;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiConsumer;
-import io.reactivex.functions.Cancellable;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.ReplaySubject;
-import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class Main extends AppCompatActivity {
     String TAG = "RxDownloader";
@@ -48,6 +31,7 @@ public class Main extends AppCompatActivity {
     EditText multiline;
     ProgressBar progressBar;
     TextView txtProgress;
+    Context context;
 
     /* PublishSubject emits to an observer only those items that are emitted
     * by the source Observable, subsequent to the time of the subscription.
@@ -62,7 +46,7 @@ public class Main extends AppCompatActivity {
     }
 
     private void example() {
-        OkHttpClient ok = new OkHttpClient.Builder().connectTimeout(6,TimeUnit.SECONDS).build();
+        OkHttpClient ok = new OkHttpClient.Builder().connectTimeout(6, TimeUnit.SECONDS).build();
         RxDownloader rxDownloader = new RxDownloader
                 .Builder(context)
                 .strategy(DownloadStrategy.MAX)
@@ -101,21 +85,24 @@ public class Main extends AppCompatActivity {
     }
 
     private void Sample() {
+        int x = 1 | 2;
+        Log.d(TAG, "x" + x);
         new RxDownloader.Builder(context)
                 .addFile(url)
-                .addFile("video", aVideo)
-                .addFile("videoxssda", aVideo)
-                .addFile("vxidaseo", aVideo)
-                .addFile("file2", url2)
-                .addFile("videoxssda", aVideo)
-                .addFile("vxidaseo", "http://fake-url.com/not-found-image.jpg")
-                .addFile("file2", url2)
-                .addFile("videoxssda", aVideo)
-                .addFile("vidaseo", "http://fake-url.com/not-found-image.jpg")
-                .addFile("vxidaseo", aVideo)
-                .addFile("file2", url2)
+                .addFile("video1", aVideo)
+                .addFile("video2", aVideo)
+                .addFile("video3", aVideo)
+                .addFile("video4", url2)
+                .addFile("video5", aVideo)
+                .addFile("video6", "http://fake-url.com/not-found-image.jpg")
+                .addFile("image7", url2)
+                .addFile("video8", aVideo)
+                .addFile("video9", "http://fake-url.com/not-found-image.jpg")
+                .addFile("video10", aVideo)
+                .addFile("image11", url2)
                 .addFile(url3)
                 .strategy(DownloadStrategy.MAX)
+                .Order(DownloadStrategy.SEQUENtIAL)
                 .build()
                 .doOnStart(() -> {
                     progressBar.setProgress(0);
@@ -150,8 +137,6 @@ public class Main extends AppCompatActivity {
 
                 });
     }
-
-    Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

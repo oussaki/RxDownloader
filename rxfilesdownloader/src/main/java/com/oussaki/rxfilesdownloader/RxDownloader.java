@@ -40,6 +40,10 @@ public class RxDownloader {
     private OnProgress onProgress;
     private OkHttpClient client;
     private int STRATEGY;
+    /**
+     * Order can be parallel or sequential
+     */
+    private int ORDER;
     private File STORAGE;
     private List<FileContainer> files;
     private int downloaded = 0;
@@ -56,6 +60,7 @@ public class RxDownloader {
         this.subject = ReplaySubject.create();
         this.rxStorage = builder.rxStorage;
         this.itemsObserver = new ItemsObserver(rxStorage);
+        this.ORDER = builder.ORDER;
     }
 
     /**
@@ -246,7 +251,6 @@ public class RxDownloader {
     private Observable<FileContainer> ObservableFileDownloader(final FileContainer fileContainer) {
         Observable<FileContainer> observable = Observable
                 .fromCallable(() -> downloadFile(fileContainer.getUrl()))
-
                 .onErrorReturn(throwable -> {
                     Log.e(TAG, "throwable");
                     byte[] b = new byte[1];
@@ -313,6 +317,16 @@ public class RxDownloader {
     }
 
     /**
+     * Downloading files sequentially using concatMap
+     *
+     * @param observable
+     * @return
+     */
+    private Observable<FileContainer> sequentialDownloading(Observable<FileContainer> observable) {
+        return observable.concatMap(fileContainer -> ObservableFileDownloader(fileContainer));
+    }
+
+    /**
      * Downloading the files in Parallel using FlatMap
      *
      * @param observable
@@ -336,7 +350,13 @@ public class RxDownloader {
                 .fromIterable(this.files)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io());
-        return parallelDownloading(observable).toList();
+
+        if (ORDER == DownloadStrategy.PARALLEL)
+            observable = parallelDownloading(observable);
+        else if (ORDER == DownloadStrategy.SEQUENtIAL)
+            observable = sequentialDownloading(observable);
+
+        return observable.toList();
     }
 
 
@@ -347,6 +367,7 @@ public class RxDownloader {
         Context context;
         OkHttpClient client;
         int STRATEGY;
+        int ORDER;
         File STORAGE;
         RxStorage rxStorage;
         /**
@@ -360,6 +381,7 @@ public class RxDownloader {
         public Builder(Context context) {
             this.context = context;
             STRATEGY = DownloadStrategy.DEFAULT;
+            ORDER = DownloadStrategy.PARALLEL; // default value
             client = new OkHttpClient.Builder()
                     .connectTimeout(500, TimeUnit.MILLISECONDS)
                     .build();
@@ -379,6 +401,19 @@ public class RxDownloader {
         public Builder client(@NonNull OkHttpClient client) {
             if (client != null)
                 this.client = client;
+            return this;
+        }
+
+
+        /**
+         * Set the order of downloading files
+         * it could be parallel or sequential
+         *
+         * @param order
+         * @return Builder
+         */
+        public Builder Order(int order) {
+            ORDER = order;
             return this;
         }
 
