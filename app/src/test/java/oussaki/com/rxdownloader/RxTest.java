@@ -47,7 +47,7 @@ public class RxTest {
     String url2 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/patrol/product_code/product_version/overview/en.jpg";
     String url3 = "https://www.nissan-cdn.net/content/dam/Nissan/nissan_middle_east/vehicles/x-trail/product_code/product_version/overview/14TDI_ROGb004x.jpg";
 
-    @Before
+   // @Before
     public void setup() throws Exception {
         ShadowLog.stream = System.out;
         main = Robolectric.setupActivity(Main.class);
