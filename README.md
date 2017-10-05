@@ -5,6 +5,9 @@
 
 This library provides a simple api to download files and handle data stream in a reactive way 
 
+
+if you liked this library you can buy me a coffe : [![Buy me coffe](https://az743702.vo.msecnd.net/cdn/kofi1.png?v=0)](https://ko-fi.com/A8134D6Z)
+
 # Usage
 	
 
