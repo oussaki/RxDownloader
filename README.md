@@ -114,7 +114,7 @@ Sometimes you want your files to be in a certain order, for that you can achieve
   ```java 
   .Order(DownloadStrategy.FLAG_SEQUENTIAL)
   ```
-  
+
     * By default the downloader is using `FLAG_PARALLEL` to achieve more speed and performance 
 
 # Testing
@@ -169,7 +169,7 @@ Add the dependency to your `build.gradle`:
 
 ```groovy
 dependencies {
-    compile 'com.github.oussaki:RxDownloader:0.2'
+    compile 'com.github.oussaki:RxDownloader:0.3'
 }
 ```
 
