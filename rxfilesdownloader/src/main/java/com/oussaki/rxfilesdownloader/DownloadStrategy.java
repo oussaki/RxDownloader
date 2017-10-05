@@ -26,12 +26,12 @@ public class DownloadStrategy {
     /**
      * Flag indicate that all the files will be downloaded in parallel with each others
      */
-    public static int PARALLEL = 3;
+    public static int FLAG_PARALLEL = 3;
 
     /**
      * Flag indicate that the files will respect the order and download sequentially
      */
-    public static int SEQUENtIAL = 4;
+    public static int FLAG_SEQUENTIAL = 4;
 
     /*
     * Definition: <p> Default Flag </p>

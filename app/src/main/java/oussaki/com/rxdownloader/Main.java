@@ -102,7 +102,7 @@ public class Main extends AppCompatActivity {
                 .addFile("image11", url2)
                 .addFile(url3)
                 .strategy(DownloadStrategy.MAX)
-                .Order(DownloadStrategy.SEQUENtIAL)
+                .Order(DownloadStrategy.FLAG_SEQUENTIAL)
                 .build()
                 .doOnStart(() -> {
                     progressBar.setProgress(0);

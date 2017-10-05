@@ -351,9 +351,9 @@ public class RxDownloader {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io());
 
-        if (ORDER == DownloadStrategy.PARALLEL)
+        if (ORDER == DownloadStrategy.FLAG_PARALLEL)
             observable = parallelDownloading(observable);
-        else if (ORDER == DownloadStrategy.SEQUENtIAL)
+        else if (ORDER == DownloadStrategy.FLAG_SEQUENTIAL)
             observable = sequentialDownloading(observable);
 
         return observable.toList();
@@ -381,7 +381,7 @@ public class RxDownloader {
         public Builder(Context context) {
             this.context = context;
             STRATEGY = DownloadStrategy.DEFAULT;
-            ORDER = DownloadStrategy.PARALLEL; // default value
+            ORDER = DownloadStrategy.FLAG_PARALLEL; // default value
             client = new OkHttpClient.Builder()
                     .connectTimeout(500, TimeUnit.MILLISECONDS)
                     .build();

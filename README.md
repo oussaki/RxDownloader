@@ -87,7 +87,8 @@ There is 5 Events you can use in this library:
 	- `addFiles(List<String> urls)`: add a bulk of URL's.
 
 
-* Download Strategy
+
+# Download Strategies
   
   	-MAX Strategy: will try to download all the files in case of errors it's will continue till the end.
 
@@ -107,6 +108,14 @@ There is 5 Events you can use in this library:
                 .Builder(context)
                 .strategy(DownloadStrategy.ALL)
 ```
+
+Sometimes you want your files to be in a certain order, for that you can achieve that by calling the `Order` Method in `Builder` this way:
+
+  ```java 
+  .Order(DownloadStrategy.FLAG_SEQUENTIAL)
+  ```
+  
+    * By default the downloader is using `FLAG_PARALLEL` to achieve more speed and performance 
 
 # Testing
   
