@@ -67,6 +67,7 @@ There is 5 Events you can use in this library:
 ```
 
 # Options :
+
 * Customize OkHttpClient  
 ```java
 	 OkHttpClient ok = new OkHttpClient.Builder().connectTimeout(6,TimeUnit.SECONDS).build();
@@ -76,18 +77,19 @@ There is 5 Events you can use in this library:
                 .build();
 ```
 * Customize Directory to save your files
-By default files will be saved in cache directory.
-You can just customize the directory by calling : `storage(File storagePath)`
+	By default files will be saved in cache directory.
+	You can just customize the directory by calling : `storage(File storagePath)`
 
-* Building list of files methods:
+* Building list of urls methods:
 
-- `addFile(String url)`: add url directly to list of urls without renaming the downloaded file.
-- `addFile(String newName, String url)`: add url to list and renaming the file to newName, Ps: No need to write the file extension.
-- `addFiles(List<String> urls)`: add a bulk of URL's.
+	- `addFile(String url)`: add url directly to list of urls without renaming the downloaded file.
+	- `addFile(String newName, String url)`: add url to list and renaming the file to newName, Ps: No need to write the file extension.
+	- `addFiles(List<String> urls)`: add a bulk of URL's.
+
 
 * Download Strategy
   
--MAX Strategy: will try to download all the files in case of errors it's will continue till the end.
+  	-MAX Strategy: will try to download all the files in case of errors it's will continue till the end.
 
 ```java
  	 new RxDownloader
@@ -97,7 +99,8 @@ You can just customize the directory by calling : `storage(File storagePath)`
 
 ```
 
--ALL Strategy: will try to download all the files but if it encountered an error it's will stop immediately.
+    
+    -ALL Strategy: will try to download all the files but if it encountered an error it's will stop immediately.
 
 ```java
 	new RxDownloader
