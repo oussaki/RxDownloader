@@ -28,7 +28,7 @@ Example:
                 });
 ```
 
-# Hanling Progress & Error Events
+# Handling Progress & Error Events
 
 There is 5 Events you can use in this library:
   
