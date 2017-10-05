@@ -6,7 +6,8 @@
 This library provides a simple api to download files and handle data stream in a reactive way 
 
 
-if you liked this library you can buy me a coffe : [![Buy me coffe](https://az743702.vo.msecnd.net/cdn/kofi1.png?v=0)](https://ko-fi.com/A8134D6Z)
+if you liked this library you can buy me a coffe : 
+<a href='https://ko-fi.com/A8134D6Z' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://az743702.vo.msecnd.net/cdn/kofi1.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 
 # Usage
 	
