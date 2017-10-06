@@ -272,13 +272,14 @@ public class RxDownloader {
         return observable.doOnNext(fileContainerOnNext -> publishContainer(fileContainerOnNext))
                 .filter(fileContainer1 -> fileContainer1.isSucceed() && !fileContainer1.isCanceled())
                 .filter(fileContainer1 -> {
-                    Log.d(TAG, "Filter 2" + fileContainer1.isCanceled());
-//                    if(canceled && )
+                    Log.d(TAG, "Filter is canceled ? " + fileContainer1.isCanceled());
                     return true;
                 });
     }
 
     /**
+     * Max Stratey handling errors
+     *
      * @param observable
      * @param fileContainer
      * @return
@@ -371,12 +372,12 @@ public class RxDownloader {
         File STORAGE;
         RxStorage rxStorage;
         /**
-         * HashMap of files to be downloaded
+         * List of files to be downloaded
          */
         List<FileContainer> files;
 
         /**
-         * @param context The context
+         * @param context
          */
         public Builder(Context context) {
             this.context = context;
@@ -504,11 +505,12 @@ public class RxDownloader {
          * @param urls
          * @return Builder
          */
-        public Builder addFiles(List<String> urls) {
-            for (String url : urls) {
-                FileContainer newFileContainer = new FileContainer(url, ExtractNameAndExtension(url));
-                this.files.add(newFileContainer);
-            }
+        public Builder addFiles(@NonNull List<String> urls) {
+            if (urls != null)
+                for (String url : urls) {
+                    if (isUrl(url))
+                        addFile(url);
+                }
             return this;
         }
 

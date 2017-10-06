@@ -18,7 +18,7 @@ Example:
 // Create one instance 
  RxDownloader rxDownloader = new RxDownloader
                 .Builder(context)
-                .addFile("http://reactivex.io/assets/Rx_Logo_S.png") // you can add more files
+                .addFile("http://reactivex.io/assets/Rx_Logo_S.png") // you can add more urls
                 .build();
 
 // Subscribe to start downloading files 
