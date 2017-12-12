@@ -1,1 +1,2 @@
 - Download images with shortcut (Following  redirection)
+- Add new strategy ( Download files BF Bigger first or SF Smaller first )
